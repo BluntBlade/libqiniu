@@ -39,7 +39,12 @@ QN_SDK qn_service_ptr qn_svc_create(qn_svc_type type)
 
 QN_SDK void qn_svc_destroy(qn_service_ptr restrict svc)
 {
+    unsigned int i = 0;
     if (svc) {
+        for (i = 0; i < svc->ent_cnt; i += 1) {
+            qn_str_destroy(svc->entries[i].base_url);
+            qn_str_destroy(svc->entries[i].hostname);
+        } // for
         free(svc->entries);
         free(svc);
     } // if
