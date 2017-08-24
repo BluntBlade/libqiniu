@@ -26,6 +26,16 @@ typedef struct _QN_STORAGE
     qn_http_json_writer_ptr resp_json_wrt;
     qn_json_object_ptr obj_body;
     qn_json_array_ptr arr_body;
+    qn_region_ptr rgn;
+
+    struct {
+        qn_svc_selector_ptr up;
+        qn_svc_selector_ptr io;
+        qn_svc_selector_ptr rs;
+        qn_svc_selector_ptr rsf;
+        unsigned int strategy:16;
+        unsigned int filter:16;
+    } sel;
 } qn_storage;
 
 QN_SDK qn_storage_ptr qn_stor_create(void)
@@ -74,6 +84,7 @@ QN_SDK qn_storage_ptr qn_stor_create(void)
 QN_SDK void qn_stor_destroy(qn_storage_ptr restrict stor)
 {
     if (stor) {
+        qn_stor_set_region(stor, NULL, QN_SVC_SEL_LAST_SUCCEEDED_FIRST, QN_SVC_SEL_ANY);
         if (stor->obj_body) qn_json_destroy_object(stor->obj_body);
         if (stor->arr_body) qn_json_destroy_array(stor->arr_body);
         qn_http_json_wrt_destroy(stor->resp_json_wrt);
@@ -82,6 +93,52 @@ QN_SDK void qn_stor_destroy(qn_storage_ptr restrict stor)
         qn_http_req_destroy(stor->req);
         free(stor);
     } // if
+}
+
+static qn_bool qn_stor_create_service_selector(qn_storage_ptr restrict stor, qn_svc_selector_ptr * restrict sel, qn_svc_type type)
+{
+    qn_service_ptr svc = qn_rgn_get_service(stor->rgn, type);
+    if (! svc) svc = qn_svc_get_default_service(type);
+    *sel = qn_svc_sel_create(svc, stor->sel.strategy, stor->sel.filter);
+    return (*sel != NULL);
+}
+
+static inline qn_bool qn_stor_create_up_selector(qn_storage_ptr restrict stor)
+{
+    return qn_stor_create_service_selector(stor, &stor->sel.up, QN_SVC_UP);
+}
+
+static inline qn_bool qn_stor_create_io_selector(qn_storage_ptr restrict stor)
+{
+    return qn_stor_create_service_selector(stor, &stor->sel.io, QN_SVC_IO);
+}
+
+static inline qn_bool qn_stor_create_rs_selector(qn_storage_ptr restrict stor)
+{
+    return qn_stor_create_service_selector(stor, &stor->sel.rs, QN_SVC_RS);
+}
+
+static inline qn_bool qn_stor_create_rsf_selector(qn_storage_ptr restrict stor)
+{
+    return qn_stor_create_service_selector(stor, &stor->sel.rsf, QN_SVC_RSF);
+}
+
+QN_SDK void qn_stor_set_region(qn_storage_ptr restrict stor, qn_region_ptr restrict rgn, unsigned int strategy, unsigned int filter)
+{
+    assert(stor);
+    if (stor->rgn) {
+        qn_svc_sel_destroy(stor->sel.up);
+        qn_svc_sel_destroy(stor->sel.io);
+        qn_svc_sel_destroy(stor->sel.rs);
+        qn_svc_sel_destroy(stor->sel.rsf);
+        stor->sel.up = NULL;
+        stor->sel.io = NULL;
+        stor->sel.rs = NULL;
+        stor->sel.rsf = NULL;
+    } // if
+    stor->rgn = rgn;
+    stor->sel.strategy = strategy;
+    stor->sel.filter = filter;
 }
 
 QN_SDK qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor)
@@ -127,7 +184,7 @@ static inline void qn_stor_reset(qn_storage_ptr restrict stor)
 typedef struct _QN_STOR_MANAGEMENT_EXTRA
 {
     unsigned int force:1;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent;
 } qn_stor_management_extra_st;
 
 QN_SDK qn_stor_management_extra_ptr qn_stor_mne_create(void)
@@ -157,9 +214,9 @@ QN_SDK void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restric
     mne->force = (force) ? 1 : 0;
 }
 
-QN_SDK void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict mne, qn_rgn_entry_ptr restrict entry)
+QN_SDK void qn_stor_mne_set_service_entry(qn_stor_management_extra_ptr restrict mne, qn_svc_entry_ptr restrict ent)
 {
-    mne->rgn_entry = entry;
+    mne->ent = ent;
 }
 
 // -------- Management Functions (abbreviation: mn) --------
@@ -272,7 +329,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
     qn_bool ret;
     qn_string op;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -281,24 +338,26 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (mne) {
-        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        ent = mne->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rs && ! qn_stor_create_rs_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rs);
     } // if
 
     // ---- Prepare the stat URL.
     op = qn_stor_mn_make_stat_op(bucket, key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(ent->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
     // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -423,7 +482,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     qn_string op;
     qn_string url;
     qn_string url_tmp;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -434,17 +493,19 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (mne) {
-        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        ent = mne->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rs && ! qn_stor_create_rs_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rs);
     } // if
 
     // ---- Prepare the copy URL.
     op = qn_stor_mn_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(ent->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -464,7 +525,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -588,7 +649,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     qn_bool ret;
     qn_string op;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -599,17 +660,19 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (mne) {
-        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        ent = mne->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rs && ! qn_stor_create_rs_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rs);
     } // if
 
     // ---- Prepare the move URL.
     op = qn_stor_mn_make_move_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(ent->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -619,7 +682,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -729,7 +792,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     qn_bool ret;
     qn_string op;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -738,17 +801,19 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
 
     // ---- Process all extra options.
     if (mne) {
-        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        ent = mne->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rs && ! qn_stor_create_rs_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rs);
     } // if
 
     // ---- Prepare the delete URL.
     op = qn_stor_mn_make_delete_op(bucket, key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(ent->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -758,7 +823,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -857,7 +922,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
     qn_string encoded_uri;
     qn_string encoded_mime;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -867,10 +932,12 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (mne) {
-        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        ent = mne->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rs && ! qn_stor_create_rs_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rs);
     } // if
 
     // ---- Prepare the change mime URL.
@@ -883,7 +950,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
         return NULL;
     } // if
 
-    url = qn_cs_sprintf("%s/chgm/%s/mime/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(encoded_uri), qn_str_cstr(encoded_mime));
+    url = qn_cs_sprintf("%s/chgm/%s/mime/%s", qn_str_cstr(ent->base_url), qn_str_cstr(encoded_uri), qn_str_cstr(encoded_mime));
     qn_str_destroy(encoded_uri);
     qn_str_destroy(encoded_mime);
     if (!url) return NULL;
@@ -893,7 +960,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -1061,7 +1128,7 @@ QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, con
     qn_string body;
     qn_string url;
     qn_json_object_ptr fake_obj_body;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -1069,17 +1136,19 @@ QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, con
 
     // ---- Process all extra options.
     if (mne) {
-        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        ent = mne->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rs && ! qn_stor_create_rs_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rs);
     } // if
 
     // ---- Prepare the batch URL.
     body = qn_str_join_list("&", bt->ops, bt->cnt);
     if (!body) return NULL;
 
-    url = qn_cs_sprintf("%s/batch", qn_str_cstr(rgn_entry->base_url));
+    url = qn_cs_sprintf("%s/batch", qn_str_cstr(ent->base_url));
     if (!url) {
         qn_str_destroy(body);
         return NULL;
@@ -1090,7 +1159,7 @@ QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, con
 
     qn_http_req_set_body_data(stor->req, qn_str_cstr(body), qn_str_size(body));
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         qn_str_destroy(body);
         return NULL;
@@ -1154,7 +1223,7 @@ typedef struct _QN_STOR_LIST_EXTRA
     qn_uint32 limit;
 
     qn_http_query_ptr qry;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent;
 } qn_stor_list_extra_st;
 
 QN_SDK qn_stor_list_extra_ptr qn_stor_lse_create(void)
@@ -1189,7 +1258,7 @@ QN_SDK void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse)
     lse->delimiter = NULL;
     lse->marker = NULL;
     lse->limit = 1000;
-    lse->rgn_entry = NULL;
+    lse->ent = NULL;
 }
 
 QN_SDK void qn_stor_lse_set_prefix(qn_stor_list_extra_ptr restrict lse, const char * restrict prefix, const char * restrict delimiter)
@@ -1308,7 +1377,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
     qn_string url;
     qn_string qry_str;
     qn_http_query_ptr qry;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
     int limit = 1000;
 
     assert(stor);
@@ -1317,8 +1386,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (lse) {
-        if (! (rgn_entry = lse->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
-
+        ent = lse->ent;
         qry = lse->qry;
 
         limit = (0 < lse->limit && lse->limit <= 1000) ? lse->limit : 1000;
@@ -1327,11 +1395,13 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
         if (lse->prefix && strlen(lse->prefix) && ! qn_http_qry_set_string(qry, "prefix", lse->prefix)) return NULL;
         if (lse->marker && strlen(lse->marker) && ! qn_http_qry_set_string(qry, "marker", lse->marker)) return NULL;
     } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
-
         qry = qn_http_qry_create();
         if (! qry) return NULL;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.rsf && ! qn_stor_create_rsf_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.rsf);
     } // if
 
     if (! qn_http_qry_set_string(qry, "bucket", bucket)) {
@@ -1349,7 +1419,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
     if (! qry_str) return NULL;
 
     // ---- Prepare the copy URL.
-    url = qn_cs_sprintf("%s/list?%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(qry_str));
+    url = qn_cs_sprintf("%s/list?%s", qn_str_cstr(ent->base_url), qn_str_cstr(qry_str));
     qn_str_destroy(qry_str);
     if (! url) return NULL;
 
@@ -1358,7 +1428,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -1395,7 +1465,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
 
 typedef struct _QN_STOR_FETCH_EXTRA
 {
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent;
 } qn_stor_fetch_extra_st;
 
 QN_SDK qn_stor_fetch_extra_ptr qn_stor_fte_create(void)
@@ -1420,9 +1490,9 @@ QN_SDK void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte)
     memset(fte, 0, sizeof(qn_stor_fetch_extra_st));
 }
 
-QN_SDK void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry)
+QN_SDK void qn_stor_fte_set_service_entry(qn_stor_fetch_extra_ptr restrict fte, qn_svc_entry_ptr restrict ent)
 {
-    fte->rgn_entry = entry;
+    fte->ent = ent;
 }
 
 // -------- Fetch Functions (abbreviation: ft) --------
@@ -1512,7 +1582,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
     qn_string encoded_src_url;
     qn_string encoded_dest_uri;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -1522,10 +1592,12 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
 
     // ---- Process all extra options.
     if (fte) {
-        if (! (rgn_entry = fte->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
+        ent = fte->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.io && ! qn_stor_create_io_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.io);
     } // if
 
     // ---- Prepare the fetch URL.
@@ -1538,7 +1610,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
         return NULL;
     } // if
 
-    url = qn_cs_sprintf("%s/fetch/%s/to/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(encoded_src_url), qn_str_cstr(encoded_dest_uri));
+    url = qn_cs_sprintf("%s/fetch/%s/to/%s", qn_str_cstr(ent->base_url), qn_str_cstr(encoded_src_url), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_src_url);
     qn_str_destroy(encoded_dest_uri);
     if (!url) return NULL;
@@ -1549,7 +1621,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -1660,7 +1732,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
     qn_bool ret;
     qn_string encoded_dest_uri;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(mac);
@@ -1669,17 +1741,19 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
 
     // ---- Process all extra options.
     if (fte) {
-        if (! (rgn_entry = fte->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
+        ent = fte->ent;
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.io && ! qn_stor_create_io_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.io);
     } // if
 
     // ---- Prepare the prefetch URL.
     encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
     if (!encoded_dest_uri) return NULL;
 
-    url = qn_cs_sprintf("%.s/prefetch/%.s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
+    url = qn_cs_sprintf("%.s/prefetch/%.s", qn_str_size(ent->base_url), qn_str_cstr(ent->base_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_dest_uri);
     if (!url) return NULL;
 
@@ -1689,7 +1763,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (! qn_stor_mn_prepare(stor, url, rgn_entry->hostname, mac)) {
+    if (! qn_stor_mn_prepare(stor, url, ent->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -1721,10 +1795,6 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
 }
-
-// ----
-
-// ----
 
 // -------- Put Policy (abbreviation: pp) --------
 
@@ -1977,7 +2047,7 @@ typedef struct _QN_STOR_UPLOAD_EXTRA
     const char * crc32;
     const char * accept_type;
 
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent;
 
     qn_fsize fsize;
     qn_io_reader_itf rdr;
@@ -2032,9 +2102,9 @@ QN_SDK void qn_stor_upe_set_user_defined_variables(qn_stor_upload_extra_ptr rest
     upe->ud_vars = ud_vars;
 }
 
-QN_SDK void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
+QN_SDK void qn_stor_upe_set_service_entry(qn_stor_upload_extra_ptr restrict upe, qn_svc_entry_ptr restrict ent)
 {
-    upe->rgn_entry = entry;
+    upe->ent = ent;
 }
 
 // -------- Ordinary Upload (abbreviation: up) --------
@@ -2165,17 +2235,19 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     qn_bool ret;
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(uptoken);
 
     if (upe) {
-        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        ent = upe->ent;
         mime_type = upe->mime_type;
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.up && ! qn_stor_create_up_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.up);
     } // if
 
     if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
@@ -2191,10 +2263,10 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     if (!ret) return NULL;
 
     // ----
-    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
+    if (ent->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(ent->hostname))) return NULL;
 
     // ----
-    ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
+    ret = qn_http_conn_post(stor->conn, qn_str_cstr(ent->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
 
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
@@ -2207,7 +2279,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     const char * mime_type = NULL;
     qn_bool ret;
     qn_http_form_ptr form;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(uptoken);
@@ -2215,11 +2287,13 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     assert(0 <= buf_size);
 
     if (upe) {
-        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        ent = upe->ent;
         mime_type = upe->mime_type;
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.up && ! qn_stor_create_up_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.up);
     } // if
 
     if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
@@ -2230,8 +2304,8 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     if (! qn_http_form_add_buffer(form, "file", "LIBQINIU-MANDATORY-FILENAME", buf, buf_size, mime_type)) return NULL;
 
     // ----
-    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
-    ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
+    if (ent->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(ent->hostname))) return NULL;
+    ret = qn_http_conn_post(stor->conn, qn_str_cstr(ent->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
 
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
@@ -2253,18 +2327,20 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
 {
     const char * mime_type = NULL;
     qn_bool ret;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     assert(stor);
     assert(uptoken);
     assert(data_rdr);
 
     if (upe) {
-        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        ent = upe->ent;
         mime_type = upe->mime_type;
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    } // if
+
+    if (! ent) {
+        if (! stor->sel.up && ! qn_stor_create_up_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.up);
     } // if
 
     if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
@@ -2275,8 +2351,8 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
     qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_cfn, qn_io_rdr_size(data_rdr));
 
     // ----
-    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
-    ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
+    if (ent->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(ent->hostname))) return NULL;
+    ret = qn_http_conn_post(stor->conn, qn_str_cstr(ent->base_url), stor->req, stor->resp);
     if (! ret) return NULL;
 
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
@@ -2697,7 +2773,7 @@ static inline qn_json_object_ptr qn_stor_rename_error_info(qn_storage_ptr restri
     return stor->obj_body;
 }
 
-static qn_bool qn_stor_ru_prepare_for_resumable_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict mime, qn_io_reader_itf restrict rdr, qn_uint size, qn_rgn_entry_ptr rgn_entry)
+static qn_bool qn_stor_ru_prepare_for_resumable_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict mime, qn_io_reader_itf restrict rdr, qn_uint size, qn_svc_entry_ptr ent)
 {
     qn_bool ret;
     qn_string tmp_hdr;
@@ -2747,7 +2823,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, con
     qn_bool ret;
     int blk_size;
     qn_string url;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     // ---- Check preconditions.
     assert(stor);
@@ -2766,16 +2842,18 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, con
 
     // ---- Process all extra options.
     if (upe) {
-        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        ent = upe->ent;
     } // if
 
-    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
+    if (! ent) {
+        if (! stor->sel.up && ! qn_stor_create_up_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.up);
+    } // if
+
+    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, ent)) return NULL;
 
     // ---- Prepare upload URL.
-    url = qn_cs_sprintf("%s/mkblk/%d", qn_str_cstr(rgn_entry->base_url), blk_size);
+    url = qn_cs_sprintf("%s/mkblk/%d", qn_str_cstr(ent->base_url), blk_size);
 
     // ---- Do the mkblk action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -2792,7 +2870,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, cons
     qn_string ctx;
     qn_integer offset;
     qn_integer blk_size;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
 
     // ---- Check preconditions.
     assert(stor);
@@ -2829,13 +2907,15 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (upe) {
-        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        ent = upe->ent;
     } // if
 
-    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
+    if (! ent) {
+        if (! stor->sel.up && ! qn_stor_create_up_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.up);
+    } // if
+
+    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, ent)) return NULL;
 
     // ---- Prepare upload URL.
     url = qn_cs_sprintf("%s/bput/%s/%d", qn_str_cstr(host), qn_str_cstr(ctx), offset);
@@ -2855,7 +2935,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     qn_string host;
     qn_string tmp_str;
     int ctx_size;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_svc_entry_ptr ent = NULL;
     const qn_string * entries = NULL;
     int i = 0;
     const char * key = NULL;
@@ -2879,13 +2959,15 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
 
     // ---- Process all extra options.
     if (upe) {
-        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        ent = upe->ent;
     } // if
 
-    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "text/plain", ctx_rdr, ctx_size, rgn_entry)) return NULL;
+    if (! ent) {
+        if (! stor->sel.up && ! qn_stor_create_up_selector(stor)) return NULL;
+        ent = qn_svc_sel_next_entry(stor->sel.up);
+    } // if
+
+    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "text/plain", ctx_rdr, ctx_size, ent)) return NULL;
 
     // ---- Prepare upload URL.
     tmp_str = qn_type_fsize_to_string(fsize);

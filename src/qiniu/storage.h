@@ -18,6 +18,7 @@
 #include "qiniu/auth.h"
 #include "qiniu/http.h"
 #include "qiniu/region.h"
+#include "qiniu/service_selector.h"
 #include "qiniu/reader.h"
 #include "qiniu/os/file.h"
 #include "qiniu/ud/variable.h"
@@ -29,13 +30,15 @@ extern "C"
 {
 #endif
 
-// -------- Storage Object (abbreviation: stor) --------
+// -------- Storage (abbreviation: stor) --------
 
 struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
 
 QN_SDK extern qn_storage_ptr qn_stor_create(void);
 QN_SDK extern void qn_stor_destroy(qn_storage_ptr restrict stor);
+
+QN_SDK extern void qn_stor_set_region(qn_storage_ptr restrict stor, qn_region_ptr restrict rgn, unsigned int strategy, unsigned int filter);
 
 QN_SDK extern qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor);
 QN_SDK extern qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor);
@@ -51,7 +54,7 @@ QN_SDK extern void qn_stor_mne_destroy(qn_stor_management_extra_ptr restrict me)
 QN_SDK extern void qn_stor_mne_reset(qn_stor_management_extra_ptr restrict me);
 
 QN_SDK extern void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restrict me, qn_bool force);
-QN_SDK extern void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict me, qn_rgn_entry_ptr restrict entry);
+QN_SDK void qn_stor_mne_set_service_entry(qn_stor_management_extra_ptr restrict mne, qn_svc_entry_ptr restrict ent);
 
 // -------- Management Functions (abbreviation: mn) --------
 
@@ -105,7 +108,7 @@ QN_SDK extern qn_stor_fetch_extra_ptr qn_stor_fte_create(void);
 QN_SDK extern void qn_stor_fte_destroy(qn_stor_fetch_extra_ptr restrict fte);
 QN_SDK extern void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte);
 
-QN_SDK extern void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry);
+QN_SDK extern void qn_stor_fte_set_service_entry(qn_stor_fetch_extra_ptr restrict fte, qn_svc_entry_ptr restrict ent);
 
 // -------- Fetch Functions (abbreviation: ft) --------
 
@@ -164,7 +167,7 @@ QN_SDK extern void qn_stor_upe_set_mime_type(qn_stor_upload_extra_ptr restrict u
 QN_SDK extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32);
 QN_SDK extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type);
 QN_SDK extern void qn_stor_upe_set_user_defined_variables(qn_stor_upload_extra_ptr restrict upe, qn_ud_variable_ptr ud_vars);
-QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry);
+QN_SDK extern void qn_stor_upe_set_service_entry(qn_stor_upload_extra_ptr restrict upe, qn_svc_entry_ptr restrict ent);
 
 // -------- Ordinary Upload (abbreviation: up) --------
 

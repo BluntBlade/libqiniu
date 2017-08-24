@@ -7,10 +7,10 @@
 
 int main(int argc, char * argv[])
 {
-    qn_bool ret;
     const char * bucket;
     const char * key;
     const char * fname;
+    qn_integer ttl;
     qn_mac_ptr mac;
     qn_string uptoken;
     qn_string hdr_ent;
@@ -19,10 +19,11 @@ int main(int argc, char * argv[])
     qn_json_object_ptr put_ret;
     qn_storage_ptr stor;
     qn_stor_upload_extra_ptr upe;
-    qn_rgn_table_ptr rgn_tbl;
-    qn_rgn_auth rgn_auth;
+    qn_region_ptr rgn;
+    qn_rgn_auth_st rgn_auth;
     qn_rgn_service_ptr rgn_svc;
-    qn_rgn_entry_ptr rgn_entry;
+    qn_service_ptr svc;
+    qn_svc_entry_ptr ent;
     qn_http_hdr_iterator_ptr hdr_itr;
 
     if (argc < 5) {
@@ -66,27 +67,19 @@ int main(int argc, char * argv[])
     } // if
 
     memset(&rgn_auth, 0, sizeof(rgn_auth));
-    rgn_auth.server_end.access_key = argv[1];
-
-    rgn_tbl = qn_rgn_tbl_create();
-    if (! rgn_tbl) {
-        qn_str_destroy(uptoken);
-        printf("Cannot create a region table due to application error `%s`.\n", qn_err_get_message());
-        return 1;
-    } // if
+    rgn_auth.v1.access_key = argv[1];
 
     rgn_svc = qn_rgn_svc_create();
     if (!rgn_svc) {
-        qn_rgn_tbl_destroy(rgn_tbl);
         qn_str_destroy(uptoken);
         printf("Cannot create a region service object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    ret = qn_rgn_svc_grab_bucket_region(rgn_svc, &rgn_auth, bucket, rgn_tbl);
+    rgn = qn_rgn_svc_grab_entry_info(rgn_svc, &rgn_auth, bucket, &ttl);
     qn_rgn_svc_destroy(rgn_svc);
-    if (! ret) {
-        qn_rgn_tbl_destroy(rgn_tbl);
+    if (! rgn) {
+        qn_rgn_destroy(rgn);
         qn_str_destroy(uptoken);
         printf("Cannot fetch region information of the bucket `%s` due to application error `%s`.\n", bucket, qn_err_get_message());
         return 1;
@@ -94,22 +87,23 @@ int main(int argc, char * argv[])
 
     upe = qn_stor_upe_create();
     if (! upe) {
-        qn_rgn_tbl_destroy(rgn_tbl);
+        qn_rgn_destroy(rgn);
         qn_str_destroy(uptoken);
         printf("Cannot create a put extra due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    rgn_entry = NULL;
-    qn_rgn_tbl_choose_first_entry(rgn_tbl, QN_RGN_SVC_UP, bucket, &rgn_entry);
+    svc = qn_rgn_get_service(rgn, QN_SVC_UP);
+    if (! svc) svc = qn_svc_get_default_service(QN_SVC_UP);
+    ent = qn_svc_get_entry(svc, 0);
 
     qn_stor_upe_set_final_key(upe, key);
-    qn_stor_upe_set_region_entry(upe, rgn_entry);
+    qn_stor_upe_set_service_entry(upe, ent);
 
     stor = qn_stor_create();
     if (! stor) {
         qn_stor_upe_destroy(upe);
-        qn_rgn_tbl_destroy(rgn_tbl);
+        qn_rgn_destroy(rgn);
         qn_str_destroy(uptoken);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
@@ -117,7 +111,7 @@ int main(int argc, char * argv[])
 
     put_ret = qn_stor_up_api_upload_file(stor, uptoken, fname, upe);
     qn_stor_upe_destroy(upe);
-    qn_rgn_tbl_destroy(rgn_tbl);
+    qn_rgn_destroy(rgn);
     qn_str_destroy(uptoken);
 
     if (! put_ret) {
