@@ -19,7 +19,12 @@ typedef struct _QN_SVC_ENTRY
 
 static inline qn_bool qn_svc_is_https_entry(qn_svc_entry_ptr restrict ent)
 {
-    return posix_strstr(qn_str_cstr(ent->base_url), "https") == qn_str_cstr(ent->base_url);
+    return posix_strstr(qn_str_cstr(ent->base_url), "https://") == qn_str_cstr(ent->base_url);
+}
+
+static inline qn_bool qn_svc_is_http_entry(qn_svc_entry_ptr restrict ent)
+{
+    return posix_strstr(qn_str_cstr(ent->base_url), "http://") == qn_str_cstr(ent->base_url);
 }
 
 // ---- Declaration of Service ----
@@ -30,7 +35,8 @@ typedef enum
     QN_SVC_IO,
     QN_SVC_RS,
     QN_SVC_RSF,
-    QN_SVC_API
+    QN_SVC_API,
+    QN_SVC_COUNT
 } qn_svc_type;
 
 struct _QN_SERVICE;
@@ -39,9 +45,15 @@ typedef struct _QN_SERVICE * qn_service_ptr;
 QN_SDK extern qn_service_ptr qn_svc_create(qn_svc_type type);
 QN_SDK extern void qn_svc_destroy(qn_service_ptr restrict svc);
 
+QN_SDK extern qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc);
+
 QN_SDK extern unsigned int qn_svc_entry_count(qn_service_ptr restrict svc);
 QN_SDK extern qn_svc_entry_ptr qn_svc_get_entry(qn_service_ptr restrict svc, unsigned int n);
+
+QN_SDK extern qn_bool qn_svc_set_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr restrict ent);
 QN_SDK extern qn_bool qn_svc_add_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr restrict ent);
+
+QN_SDK extern qn_service_ptr qn_svc_get_default_service(qn_svc_type type);
 
 #ifdef __cplusplus
 }

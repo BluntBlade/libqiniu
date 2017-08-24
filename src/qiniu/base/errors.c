@@ -70,6 +70,9 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_EASY_INVALID_UPTOKEN, "Got an invalid uptoken"},
     {QN_ERR_EASY_INVALID_PUT_POLICY, "Got an invalid put policy"},
 
+    {QN_ERR_RGN_LACK_OF_ENTRY_INFO, "Lack of region entry information"},
+    {QN_ERR_RGN_ENTRY_INFO_EXPIRED, "Region entry information expired"},
+
     {QN_ERR_3RDP_GLIBC_ERROR_OCCURRED, "glibc error occurred"},
     {QN_ERR_3RDP_CURL_EASY_ERROR_OCCURRED, "cURL easy error occurred"},
     {QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED, "OpenSSL error occurred"}

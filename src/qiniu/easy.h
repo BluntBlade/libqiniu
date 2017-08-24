@@ -61,12 +61,12 @@ QN_SDK extern void qn_easy_pe_set_user_defined_variables(qn_easy_put_extra_ptr r
 QN_SDK extern qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, qn_size str_size);
 QN_SDK extern qn_string qn_easy_pe_get_resumable_info(qn_easy_put_extra_ptr restrict pe);
 
-QN_SDK extern void qn_easy_pe_set_region_host(qn_easy_put_extra_ptr restrict pe, qn_rgn_host_ptr restrict rgn_host);
-QN_SDK extern void qn_easy_pe_set_region_entry(qn_easy_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict rgn_entry);
+QN_SDK extern void qn_easy_pe_set_service_entry(qn_easy_put_extra_ptr restrict pe, qn_svc_entry_ptr restrict ent);
 
 // ----
 
 QN_SDK extern qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext);
+QN_SDK extern qn_json_object_ptr qn_easy_put_huge_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext);
 
 /*
 QN_SDK extern qn_json_object_ptr qn_easy_put_stream(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_reader_itf restrict rdr, qn_easy_put_extra_ptr restrict ext);
