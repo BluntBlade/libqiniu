@@ -44,13 +44,13 @@ typedef struct _QN_SERVICE * qn_service_ptr;
 
 QN_SDK extern qn_service_ptr qn_svc_create(qn_svc_type type);
 QN_SDK extern void qn_svc_destroy(qn_service_ptr restrict svc);
+QN_SDK extern void qn_svc_reset(qn_service_ptr restrict svc);
 
 QN_SDK extern qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc);
 
 QN_SDK extern unsigned int qn_svc_entry_count(qn_service_ptr restrict svc);
 QN_SDK extern qn_svc_entry_ptr qn_svc_get_entry(qn_service_ptr restrict svc, unsigned int n);
 
-QN_SDK extern qn_bool qn_svc_set_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr restrict ent);
 QN_SDK extern qn_bool qn_svc_add_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr restrict ent);
 
 QN_SDK extern qn_service_ptr qn_svc_get_default_service(qn_svc_type type);

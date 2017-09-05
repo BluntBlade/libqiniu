@@ -143,12 +143,15 @@ QN_SDK void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc)
 
 static qn_bool qn_rgn_svc_parse_and_add_entry(qn_string restrict txt, qn_service_ptr restrict svc)
 {
+    qn_bool ret = qn_false;
     const char * end = NULL;
     const char * base_url = NULL;
     const char * hostname = NULL;
     qn_size base_url_size = 0;
     qn_size hostname_size = 0;
     qn_svc_entry_st new_ent;
+
+    memset(&new_ent, 0, sizeof(new_ent));
 
     if ((hostname = posix_strstr(qn_str_cstr(txt), "-H"))) {
         hostname += 2;
@@ -174,7 +177,12 @@ static qn_bool qn_rgn_svc_parse_and_add_entry(qn_string restrict txt, qn_service
         return qn_false;
     } // if
 
-    if (! qn_svc_set_entry(svc, &new_ent)) return qn_false;
+    ret = qn_svc_add_entry(svc, &new_ent);
+    qn_str_destroy(new_ent.base_url);
+    qn_str_destroy(new_ent.hostname);
+    if (! ret) {
+        return qn_false;
+    } // if
     return qn_true;
 }
 

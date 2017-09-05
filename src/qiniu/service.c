@@ -11,8 +11,8 @@ extern "C"
 typedef struct _QN_SERVICE
 {
     qn_svc_entry_st * entries;
-    unsigned int ent_cnt:8;
-    unsigned int ent_cap:8;
+    unsigned int cnt:8;
+    unsigned int cap:8;
     unsigned int type:8;
 } qn_service_st;
 
@@ -24,9 +24,9 @@ static qn_service_ptr qn_svc_allocate(unsigned int cap)
         return NULL;
     } // if
 
-    new_svc->ent_cnt = 0;
-    new_svc->ent_cap = cap;
-    new_svc->entries = calloc(new_svc->ent_cap, sizeof(qn_svc_entry_st));
+    new_svc->cnt = 0;
+    new_svc->cap = cap;
+    new_svc->entries = calloc(new_svc->cap, sizeof(qn_svc_entry_st));
     if (! new_svc->entries) {
         free(new_svc);
         qn_err_set_out_of_memory();
@@ -46,20 +46,25 @@ QN_SDK qn_service_ptr qn_svc_create(qn_svc_type type)
 
 QN_SDK void qn_svc_destroy(qn_service_ptr restrict svc)
 {
-    unsigned int i = 0;
     if (svc) {
-        for (i = 0; i < svc->ent_cnt; i += 1) {
-            qn_str_destroy(svc->entries[i].base_url);
-            qn_str_destroy(svc->entries[i].hostname);
-            svc->entries[i].base_url = NULL;
-            svc->entries[i].hostname = NULL;
-        } // for
-
+        qn_svc_reset(svc);
         free(svc->entries);
         svc->entries = NULL;
-
         free(svc);
     } // if
+}
+
+QN_SDK void qn_svc_reset(qn_service_ptr restrict svc)
+{
+    unsigned int i = 0;
+    assert(svc);
+    for (i = 0; i < svc->cnt; i += 1) {
+        qn_str_destroy(svc->entries[i].base_url);
+        qn_str_destroy(svc->entries[i].hostname);
+        svc->entries[i].base_url = NULL;
+        svc->entries[i].hostname = NULL;
+    } // for
+    svc->cnt = 0;
 }
 
 QN_SDK qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc)
@@ -69,8 +74,8 @@ QN_SDK qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc)
 
     assert(svc);
 
-    if ((svc = qn_svc_allocate(svc->ent_cap))) {
-        for (i = 0; i < svc->ent_cnt; i += 1) {
+    if ((svc = qn_svc_allocate(svc->cap))) {
+        for (i = 0; i < svc->cnt; i += 1) {
             if (! (new_svc->entries[i].base_url = qn_str_duplicate(svc->entries[i].base_url)) ) {
                 qn_svc_destroy(new_svc);
                 return NULL;
@@ -84,7 +89,7 @@ QN_SDK qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc)
                 } // if
             } // if
 
-            new_svc->ent_cnt += 1;
+            new_svc->cnt += 1;
         } // if
         new_svc->type = svc->type;
     } // if
@@ -95,19 +100,19 @@ QN_SDK qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc)
 QN_SDK unsigned int qn_svc_entry_count(qn_service_ptr restrict svc)
 {
     assert(svc);
-    return svc->ent_cnt;
+    return svc->cnt;
 }
 
 QN_SDK qn_svc_entry_ptr qn_svc_get_entry(qn_service_ptr restrict svc, unsigned int n)
 {
     assert(svc);
-    if (svc->ent_cnt < n) return NULL;
+    if (svc->cnt < n) return NULL;
     return &svc->entries[n];
 }
 
 static qn_bool qn_svc_augment(qn_service_ptr restrict svc)
 {
-    unsigned int new_cap = svc->ent_cap + (svc->ent_cap >> 1); // 1.5 times
+    unsigned int new_cap = svc->cap + (svc->cap >> 1); // 1.5 times
     qn_svc_entry_st * new_entries = calloc(new_cap < 255 ? new_cap : 255, sizeof(qn_svc_entry_st));
 
     if (! new_entries) {
@@ -115,33 +120,23 @@ static qn_bool qn_svc_augment(qn_service_ptr restrict svc)
         return qn_false;
     } // if
 
-    memcpy(new_entries, svc->entries, sizeof(qn_svc_entry_st) * svc->ent_cnt);
+    memcpy(new_entries, svc->entries, sizeof(qn_svc_entry_st) * svc->cnt);
     free(svc->entries);
 
     svc->entries = new_entries;
-    svc->ent_cap = new_cap & 0xFF;
+    svc->cap = new_cap & 0xFF;
     return qn_true;
 }
 
 static inline qn_bool qn_svc_try_to_augment(qn_service_ptr restrict svc)
 {
-    if (svc->ent_cnt == svc->ent_cap) {
-        if (svc->ent_cap == 255) {
+    if (svc->cnt == svc->cap) {
+        if (svc->cap == 255) {
             qn_err_set_out_of_capacity();
             return qn_false;
         } // if
         return qn_svc_augment(svc);
     } // if
-    return qn_true;
-}
-
-QN_SDK qn_bool qn_svc_set_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr restrict ent)
-{
-    assert(svc);
-    assert(ent);
-
-    if (! qn_svc_try_to_augment(svc)) return qn_false;
-    svc->entries[svc->ent_cnt++] = *ent;
     return qn_true;
 }
 
@@ -152,15 +147,15 @@ QN_SDK qn_bool qn_svc_add_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr re
 
     if (! qn_svc_try_to_augment(svc)) return qn_false;
 
-    svc->entries[svc->ent_cnt].base_url = qn_str_duplicate(ent->base_url);
-    if (! svc->entries[svc->ent_cnt].base_url) return qn_false;
+    svc->entries[svc->cnt].base_url = qn_str_duplicate(ent->base_url);
+    if (! svc->entries[svc->cnt].base_url) return qn_false;
 
-    if (ent->hostname && ! (svc->entries[svc->ent_cnt].hostname = qn_str_duplicate(ent->hostname))) {
-        qn_str_destroy(svc->entries[svc->ent_cnt].base_url);
+    if (ent->hostname && ! (svc->entries[svc->cnt].hostname = qn_str_duplicate(ent->hostname))) {
+        qn_str_destroy(svc->entries[svc->cnt].base_url);
         return qn_false;
     } // if
 
-    svc->ent_cnt += 1;
+    svc->cnt += 1;
     return qn_true;
 }
 
