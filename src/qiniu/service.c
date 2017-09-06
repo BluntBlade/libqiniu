@@ -61,9 +61,8 @@ QN_SDK void qn_svc_reset(qn_service_ptr restrict svc)
     for (i = 0; i < svc->cnt; i += 1) {
         qn_str_destroy(svc->entries[i].base_url);
         qn_str_destroy(svc->entries[i].hostname);
-        svc->entries[i].base_url = NULL;
-        svc->entries[i].hostname = NULL;
     } // for
+    memset(svc->entries, 0, sizeof(qn_svc_entry_st) * svc->cnt);
     svc->cnt = 0;
 }
 
@@ -93,7 +92,6 @@ QN_SDK qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc)
         } // if
         new_svc->type = svc->type;
     } // if
-
     return new_svc;
 }
 
@@ -152,6 +150,7 @@ QN_SDK qn_bool qn_svc_add_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr re
 
     if (ent->hostname && ! (svc->entries[svc->cnt].hostname = qn_str_duplicate(ent->hostname))) {
         qn_str_destroy(svc->entries[svc->cnt].base_url);
+        svc->entries[svc->cnt].base_url = NULL;
         return qn_false;
     } // if
 
@@ -160,13 +159,9 @@ QN_SDK qn_bool qn_svc_add_entry(qn_service_ptr restrict svc, qn_svc_entry_ptr re
 }
 
 static qn_svc_entry_st qn_svc_default_up_entry = { "http://up.qiniu.com", NULL };
-
 static qn_svc_entry_st qn_svc_default_io_entry = { "http://iovip.qbox.me", NULL };
-
 static qn_svc_entry_st qn_svc_default_rs_entry = { "http://rs.qiniu.com", NULL };
-
 static qn_svc_entry_st qn_svc_default_rsf_entry = { "http://rsf.qbox.me", NULL };
-
 static qn_svc_entry_st qn_svc_default_api_entry = { "http://api.qiniu.com", NULL };
 
 static qn_service_st qn_svc_default_services[QN_SVC_COUNT] = {

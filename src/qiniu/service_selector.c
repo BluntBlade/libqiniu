@@ -12,7 +12,6 @@ typedef struct _QN_SVC_SELECTOR_ENTRY
 {
     qn_svc_entry_ptr entry;
     unsigned int failures:16;
-    unsigned int enabled:1;
 } qn_svc_selector_entry_st;
 
 typedef struct _QN_SVC_SELECTOR
@@ -24,29 +23,6 @@ typedef struct _QN_SVC_SELECTOR
     unsigned int next:8;
     qn_svc_selector_entry_st entries[1];
 } qn_svc_selector_st;
-
-static void qn_svc_sel_init(qn_svc_selector_ptr restrict sel)
-{
-    unsigned int i = 0;
-    qn_svc_entry_ptr ent = NULL;
-
-    sel->next = 0;
-    sel->count = 0;
-    memset(&sel->entries, 0, sizeof(qn_svc_selector_entry_st) * qn_svc_entry_count(sel->svc));
-    for (i = 0; i < qn_svc_entry_count(sel->svc); i += 1) {
-        ent = qn_svc_get_entry(sel->svc, i);
-        if ((sel->filter & QN_SVC_SEL_NO_HTTPS) && qn_svc_is_https_entry(ent)) {
-            continue;
-        } // if
-        if ((sel->filter & QN_SVC_SEL_NO_HTTP) && qn_svc_is_http_entry(ent)) {
-            continue;
-        } // if
-
-        sel->entries[sel->count].entry = ent;
-        sel->entries[sel->count].enabled = 1;
-        sel->count += 1;
-    } // for
-}
 
 QN_SDK qn_svc_selector_ptr qn_svc_sel_create(qn_service_ptr restrict svc, qn_svc_selector_strategy strategy, qn_svc_selector_filter filter)
 {
@@ -64,7 +40,7 @@ QN_SDK qn_svc_selector_ptr qn_svc_sel_create(qn_service_ptr restrict svc, qn_svc
     new_sel->strategy = strategy;
     new_sel->filter = filter;
 
-    qn_svc_sel_init(new_sel);
+    qn_svc_sel_reset(new_sel);
     return new_sel;
 }
 
@@ -77,8 +53,26 @@ QN_SDK void qn_svc_sel_destroy(qn_svc_selector_ptr restrict sel)
 
 QN_SDK void qn_svc_sel_reset(qn_svc_selector_ptr restrict sel)
 {
+    unsigned int i = 0;
+    qn_svc_entry_ptr ent = NULL;
+
     assert(sel);
-    qn_svc_sel_init(sel);
+
+    sel->next = 0;
+    sel->count = 0;
+    memset(&sel->entries, 0, sizeof(qn_svc_selector_entry_st) * qn_svc_entry_count(sel->svc));
+    for (i = 0; i < qn_svc_entry_count(sel->svc); i += 1) {
+        ent = qn_svc_get_entry(sel->svc, i);
+        if ((sel->filter & QN_SVC_SEL_NO_HTTPS) && qn_svc_is_https_entry(ent)) {
+            continue;
+        } // if
+        if ((sel->filter & QN_SVC_SEL_NO_HTTP) && qn_svc_is_http_entry(ent)) {
+            continue;
+        } // if
+
+        sel->entries[sel->count].entry = ent;
+        sel->count += 1;
+    } // for
 }
 
 // ----
