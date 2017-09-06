@@ -139,6 +139,11 @@ QN_SDK void qn_err_set_code(qn_err_code_em cd, qn_uint32 lib_cd, const char * re
     qn_err_msg.lib_code = lib_cd;
 }
 
+QN_SDK qn_uint32 qn_err_get_lib_code(void)
+{
+    return qn_err_msg.lib_code;
+}
+
 QN_SDK qn_err_code_em qn_err_get_code(void)
 {
     return qn_err_msg.code;

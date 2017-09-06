@@ -383,8 +383,11 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
     // ---- Do the stat action.
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (mne && mne->ent) qn_http_check_and_register_connection_failure(stor->sel.rs, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -551,8 +554,11 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     // ---- Do the copy action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (mne && mne->ent) qn_http_check_and_register_connection_failure(stor->sel.rs, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -708,8 +714,11 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     // ---- Do the move action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (mne && mne->ent) qn_http_check_and_register_connection_failure(stor->sel.rs, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -849,8 +858,11 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     // ---- Do the delete action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (mne && mne->ent) qn_http_check_and_register_connection_failure(stor->sel.rs, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -986,8 +998,11 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
     // ---- Do the change mime action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (mne && mne->ent) qn_http_check_and_register_connection_failure(stor->sel.rs, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -1198,8 +1213,11 @@ QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, con
     qn_str_destroy(url);
     qn_str_destroy(body);
     stor->arr_body = NULL; // Keep from destroying the array twice.
+    if (! ret) {
+        if (mne && mne->ent) qn_http_check_and_register_connection_failure(stor->sel.rs, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     if (stor->obj_body) {
         // Get an object rather than an array.
         // TODO: Trace the change of return value to this API and make the corresponding fix.
@@ -1454,7 +1472,10 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
     // ---- Do the list action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (! ret) return NULL;
+    if (! ret) {
+        if (lse && lse->ent) qn_http_check_and_register_connection_failure(stor->sel.rsf, ent);
+        return NULL;
+    } // if
 
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (! qn_json_obj_rename(stor->obj_body, "error", "fn-error") && ! qn_err_is_no_such_entry()) return NULL;
@@ -1647,8 +1668,11 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
     // ---- Do the fetch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (fte && fte->ent) qn_http_check_and_register_connection_failure(stor->sel.io, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -1789,8 +1813,11 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
     // ---- Do the prefetch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    if (! ret) {
+        if (fte && fte->ent) qn_http_check_and_register_connection_failure(stor->sel.io, ent);
+        return NULL;
+    } // if
 
-    if (!ret) return NULL;
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -2314,7 +2341,10 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     // ----
     if (ent->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(ent->hostname))) return NULL;
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(ent->base_url), stor->req, stor->resp);
-    if (!ret) return NULL;
+    if (! ret) {
+        if (upe && upe->ent) qn_http_check_and_register_connection_failure(stor->sel.up, ent);
+        return NULL;
+    } // if
 
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
@@ -2361,7 +2391,10 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
     // ----
     if (ent->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(ent->hostname))) return NULL;
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(ent->base_url), stor->req, stor->resp);
-    if (! ret) return NULL;
+    if (! ret) {
+        if (upe && upe->ent) qn_http_check_and_register_connection_failure(stor->sel.up, ent);
+        return NULL;
+    } // if
 
     qn_json_obj_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (! qn_json_obj_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
@@ -2912,7 +2945,10 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, con
     // ---- Do the mkblk action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (! ret) return NULL;
+    if (! ret) {
+        if (upe && upe->ent) qn_http_check_and_register_connection_failure(stor->sel.up, ent);
+        return NULL;
+    } // if
     return qn_stor_rename_error_info(stor);
 }
 
@@ -2981,7 +3017,10 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, cons
     // ---- Do the bput action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (! ret) return NULL;
+    if (! ret) {
+        if (upe && upe->ent) qn_http_check_and_register_connection_failure(stor->sel.up, ent);
+        return NULL;
+    } // if
     return qn_stor_rename_error_info(stor);
 }
 
@@ -3090,7 +3129,10 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     // ---- Do the mkfile action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (! ret) return NULL;
+    if (! ret) {
+        if (upe && upe->ent) qn_http_check_and_register_connection_failure(stor->sel.up, ent);
+        return NULL;
+    } // if
     return qn_stor_rename_error_info(stor);
 }
 

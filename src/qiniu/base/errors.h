@@ -80,6 +80,7 @@ QN_SDK extern const char * qn_err_get_message(void);
 
 QN_SDK extern void qn_err_set_code(qn_err_code_em cd, qn_uint32 lib_cd, const char * restrict file, int line);
 QN_SDK extern qn_err_code_em qn_err_get_code(void);
+QN_SDK extern qn_uint32 qn_err_get_lib_code(void);
 
 // ----
 
@@ -379,6 +380,10 @@ static inline qn_bool qn_err_easy_is_invalid_put_policy(void)
 
 #define qn_err_rgn_is_lack_of_entry_info() (qn_err_get_code() == QN_ERR_RGN_LACK_OF_ENTRY_INFO)
 #define qn_err_rgn_is_entry_info_expired() (qn_err_get_code() == QN_ERR_RGN_ENTRY_INFO_EXPIRED)
+
+#define qn_err_3rdp_is_glibc_error_occurred() (qn_err_get_code() == QN_ERR_3RDP_GLIBC_ERROR_OCCURRED)
+#define qn_err_3rdp_is_curl_easy_error_occurred() (qn_err_get_code() == QN_ERR_3RDP_CURL_EASY_ERROR_OCCURRED)
+#define qn_err_3rdp_is_openssl_error_occurred() (qn_err_get_code() == QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED)
 
 #ifdef __cplusplus
 }

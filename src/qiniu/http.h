@@ -4,6 +4,7 @@
 #include "qiniu/base/string.h"
 #include "qiniu/base/json.h"
 #include "qiniu/http_header.h"
+#include "qiniu/service_selector.h"
 #include "qiniu/os/file.h"
 
 #include "qiniu/macros.h"
@@ -120,6 +121,10 @@ QN_SDK extern void qn_http_conn_destroy(qn_http_connection_ptr restrict conn);
 
 QN_SDK extern qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
 QN_SDK extern qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
+
+// ---- Declaration of common functions ----
+
+QN_SDK extern void qn_http_check_and_register_connection_failure(qn_svc_selector_ptr restrict sel, qn_svc_entry_ptr restrict ent);
 
 #ifdef __cplusplus
 }

@@ -710,6 +710,7 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
                 return qn_false;
 
             default:
+                qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
                 break;
         } // switch
     } // if
@@ -780,6 +781,15 @@ QN_SDK qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const cha
     } // form
 
     return qn_http_conn_do_request(conn, req, resp);
+}
+
+// ---- Definition of common functions ----
+
+QN_SDK void qn_http_check_and_register_connection_failure(qn_svc_selector_ptr restrict sel, qn_svc_entry_ptr restrict ent)
+{
+    if (qn_err_is_try_again() || qn_err_comm_is_transmission_failed()) {
+        qn_svc_sel_register_failed_entry(sel, ent);
+    } // if
 }
 
 #ifdef __cplusplus
