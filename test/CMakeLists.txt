@@ -12,3 +12,6 @@ target_link_libraries (test_etag qiniu cunit crypto curl ssl crypto)
 
 add_executable (test_cdn test_cdn.c)
 target_link_libraries (test_cdn qiniu cunit crypto curl ssl crypto)
+
+add_executable (test_service test_service.c)
+target_link_libraries (test_service qiniu cunit crypto curl ssl crypto)
