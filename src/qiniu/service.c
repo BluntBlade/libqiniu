@@ -73,7 +73,7 @@ QN_SDK qn_service_ptr qn_svc_duplicate(qn_service_ptr restrict svc)
 
     assert(svc);
 
-    if ((svc = qn_svc_allocate(svc->cap))) {
+    if ((new_svc = qn_svc_allocate(svc->cap))) {
         for (i = 0; i < svc->cnt; i += 1) {
             if (! (new_svc->entries[i].base_url = qn_str_duplicate(svc->entries[i].base_url)) ) {
                 qn_svc_destroy(new_svc);

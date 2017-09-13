@@ -122,9 +122,107 @@ void test_add_entry(void)
     qn_svc_destroy(svc);
 }
 
+void test_duplicate(void)
+{
+    qn_bool ret = qn_false;
+    qn_service_ptr svc = NULL;
+    qn_service_ptr svc_dup = NULL;
+    qn_svc_entry_st ent;
+    qn_svc_entry_ptr ent_ptr;
+
+    svc = qn_svc_create(QN_SVC_UP);
+    if (! svc) CU_FAIL_FATAL("Cannot create a new service object");
+
+    // Add first one
+    ent.base_url = qn_cs_duplicate("http://up.fake.com");
+    if (! ent.base_url) CU_FAIL_FATAL("Cannot create a test string");
+
+    ent.hostname = NULL;
+
+    ret = qn_svc_add_entry(svc, &ent);
+    qn_str_destroy(ent.base_url);
+    if (! ret) CU_FAIL_FATAL("Cannot add a new entry");
+
+    // Add second one
+    ent.base_url = qn_cs_duplicate("https://127.0.0.1");
+    if (! ent.base_url) CU_FAIL_FATAL("Cannot create a test string");
+
+    ent.hostname = qn_cs_duplicate("upload.fake.com");
+    if (! ent.hostname) CU_FAIL_FATAL("Cannot create a test string");
+
+    ret = qn_svc_add_entry(svc, &ent);
+    qn_str_destroy(ent.base_url);
+    qn_str_destroy(ent.hostname);
+    if (! ret) CU_FAIL_FATAL("Cannot add a new entry");
+
+    // Add repeat ones
+    ent.base_url = qn_cs_duplicate("http://up.repeat.com");
+    if (! ent.base_url) CU_FAIL_FATAL("Cannot create a test string");
+
+    ent.hostname = NULL;
+
+    ret = qn_svc_add_entry(svc, &ent);
+    if (! ret) CU_FAIL_FATAL("Cannot add a new entry");
+
+    ret = qn_svc_add_entry(svc, &ent);
+    qn_str_destroy(ent.base_url);
+    if (! ret) CU_FAIL_FATAL("Cannot add a new entry");
+
+    // Add fifth one
+    ent.base_url = qn_cs_duplicate("http://up.augment.com");
+    if (! ent.base_url) CU_FAIL_FATAL("Cannot create a test string");
+
+    ent.hostname = NULL;
+
+    ret = qn_svc_add_entry(svc, &ent);
+    qn_str_destroy(ent.base_url);
+    if (! ret) CU_FAIL_FATAL("Cannot add a new entry");
+
+    // Do duplication
+    svc_dup = qn_svc_duplicate(svc);
+    CU_ASSERT_PTR_NOT_NULL(svc_dup);
+    CU_ASSERT_EQUAL(qn_svc_entry_count(svc_dup), 5);
+
+    // Check result
+    ent_ptr = qn_svc_get_entry(svc_dup, 0);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr->base_url);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://up.fake.com"), 0);
+    CU_ASSERT_PTR_NULL(ent_ptr->hostname);
+
+    ent_ptr = qn_svc_get_entry(svc_dup, 1);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr->base_url);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "https://127.0.0.1"), 0);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr->hostname);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->hostname, "upload.fake.com"), 0);
+
+    ent_ptr = qn_svc_get_entry(svc_dup, 2);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr->base_url);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://up.repeat.com"), 0);
+    CU_ASSERT_PTR_NULL(ent_ptr->hostname);
+
+    ent_ptr = qn_svc_get_entry(svc_dup, 3);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr->base_url);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://up.repeat.com"), 0);
+    CU_ASSERT_PTR_NULL(ent_ptr->hostname);
+
+    ent_ptr = qn_svc_get_entry(svc_dup, 4);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr);
+    CU_ASSERT_PTR_NOT_NULL(ent_ptr->base_url);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://up.augment.com"), 0);
+    CU_ASSERT_PTR_NULL(ent_ptr->hostname);
+
+    qn_svc_destroy(svc_dup);
+    qn_svc_destroy(svc);
+}
+
 CU_TestInfo test_normal_cases[] = {
     {"test_create", test_create},
     {"test_add_entry", test_add_entry},
+    {"test_duplicate", test_duplicate},
     CU_TEST_INFO_NULL
 };
 
