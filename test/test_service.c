@@ -224,6 +224,7 @@ void test_get_default_service(void)
     qn_service_ptr svc = NULL;
     qn_svc_entry_ptr ent_ptr = NULL;
 
+    // Check UP
     svc = qn_svc_get_default_service(QN_SVC_UP);
     CU_ASSERT_PTR_NOT_NULL(svc);
     CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
@@ -231,6 +232,7 @@ void test_get_default_service(void)
     ent_ptr = qn_svc_get_entry(svc, 0);
     CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://up.qiniu.com"), 0);
 
+    // Check IO
     svc = qn_svc_get_default_service(QN_SVC_IO);
     CU_ASSERT_PTR_NOT_NULL(svc);
     CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
@@ -238,6 +240,7 @@ void test_get_default_service(void)
     ent_ptr = qn_svc_get_entry(svc, 0);
     CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://iovip.qbox.me"), 0);
 
+    // Check RS
     svc = qn_svc_get_default_service(QN_SVC_RS);
     CU_ASSERT_PTR_NOT_NULL(svc);
     CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
@@ -245,6 +248,7 @@ void test_get_default_service(void)
     ent_ptr = qn_svc_get_entry(svc, 0);
     CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://rs.qiniu.com"), 0);
 
+    // Check RSF
     svc = qn_svc_get_default_service(QN_SVC_RSF);
     CU_ASSERT_PTR_NOT_NULL(svc);
     CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
@@ -252,6 +256,7 @@ void test_get_default_service(void)
     ent_ptr = qn_svc_get_entry(svc, 0);
     CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://rsf.qbox.me"), 0);
 
+    // Check API
     svc = qn_svc_get_default_service(QN_SVC_API);
     CU_ASSERT_PTR_NOT_NULL(svc);
     CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
@@ -281,7 +286,7 @@ int main(void)
         return CU_get_error();
     } // if
 
-    pSuite = CU_add_suite("Suite_Test_String", NULL, NULL);
+    pSuite = CU_add_suite("Suite_Test_Service", NULL, NULL);
     if (pSuite == NULL) {
         CU_cleanup_registry();
         return CU_get_error();
