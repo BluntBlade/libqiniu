@@ -15,3 +15,6 @@ target_link_libraries (test_cdn qiniu cunit crypto curl ssl crypto)
 
 add_executable (test_service test_service.c)
 target_link_libraries (test_service qiniu cunit crypto curl ssl crypto)
+
+add_executable (test_service_selector test_service_selector.c)
+target_link_libraries (test_service_selector qiniu cunit crypto curl ssl crypto)
