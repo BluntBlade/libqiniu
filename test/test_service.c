@@ -17,8 +17,8 @@ void test_add_entry(void)
 {
     qn_bool ret = qn_false;
     qn_service_ptr svc = NULL;
+    qn_svc_entry_ptr ent_ptr = NULL;
     qn_svc_entry_st ent;
-    qn_svc_entry_ptr ent_ptr;
 
     svc = qn_svc_create(QN_SVC_UP);
     if (! svc) CU_FAIL_FATAL("Cannot create a new service object");
@@ -127,8 +127,8 @@ void test_duplicate(void)
     qn_bool ret = qn_false;
     qn_service_ptr svc = NULL;
     qn_service_ptr svc_dup = NULL;
+    qn_svc_entry_ptr ent_ptr = NULL;
     qn_svc_entry_st ent;
-    qn_svc_entry_ptr ent_ptr;
 
     svc = qn_svc_create(QN_SVC_UP);
     if (! svc) CU_FAIL_FATAL("Cannot create a new service object");
@@ -219,10 +219,52 @@ void test_duplicate(void)
     qn_svc_destroy(svc);
 }
 
+void test_get_default_service(void)
+{
+    qn_service_ptr svc = NULL;
+    qn_svc_entry_ptr ent_ptr = NULL;
+
+    svc = qn_svc_get_default_service(QN_SVC_UP);
+    CU_ASSERT_PTR_NOT_NULL(svc);
+    CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
+
+    ent_ptr = qn_svc_get_entry(svc, 0);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://up.qiniu.com"), 0);
+
+    svc = qn_svc_get_default_service(QN_SVC_IO);
+    CU_ASSERT_PTR_NOT_NULL(svc);
+    CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
+
+    ent_ptr = qn_svc_get_entry(svc, 0);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://iovip.qbox.me"), 0);
+
+    svc = qn_svc_get_default_service(QN_SVC_RS);
+    CU_ASSERT_PTR_NOT_NULL(svc);
+    CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
+
+    ent_ptr = qn_svc_get_entry(svc, 0);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://rs.qiniu.com"), 0);
+
+    svc = qn_svc_get_default_service(QN_SVC_RSF);
+    CU_ASSERT_PTR_NOT_NULL(svc);
+    CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
+
+    ent_ptr = qn_svc_get_entry(svc, 0);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://rsf.qbox.me"), 0);
+
+    svc = qn_svc_get_default_service(QN_SVC_API);
+    CU_ASSERT_PTR_NOT_NULL(svc);
+    CU_ASSERT_TRUE(qn_svc_entry_count(svc) > 0);
+
+    ent_ptr = qn_svc_get_entry(svc, 0);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(ent_ptr->base_url, "http://api.qiniu.com"), 0);
+}
+
 CU_TestInfo test_normal_cases[] = {
     {"test_create", test_create},
     {"test_add_entry", test_add_entry},
     {"test_duplicate", test_duplicate},
+    {"test_get_default_service", test_get_default_service},
     CU_TEST_INFO_NULL
 };
 
