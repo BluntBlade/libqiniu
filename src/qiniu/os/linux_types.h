@@ -17,15 +17,15 @@ typedef bool qn_bool;
 static const qn_bool qn_false = false;
 static const qn_bool qn_true = true;
 
-#if defined(QN_CFG_BIG_NUMBERS)
+#if defined(QN_CFG_SMALL_NUMBERS)
 
-typedef long long qn_integer;
-typedef long double qn_number;
+typedef int qn_integer;         // 4 Bytes for ILP32 and LP64
+typedef float qn_number;        // 4 Bytes for ILP32 and LP64
 
 #else
 
-typedef long qn_integer;
-typedef double qn_number;
+typedef long long qn_integer;   // 8 Bytes for ILP32 and LP64
+typedef double qn_number;       // 8 Bytes for ILP32 and LP64
 
 #endif
 
