@@ -703,7 +703,11 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
             return qn_json_push_integer(lvl->elem.array, integer);
 
         case QN_JSON_TKN_NUMBER:
-            number = strtold(txt, &end_txt);
+#if defined(QN_CFG_SMALL_NUMBERS)
+            number = strtof(txt, &end_txt);
+#else
+            number = strtod(txt, &end_txt);
+#endif
             if (end_txt == txt) {
                 qn_err_json_set_bad_text_input();
                 return qn_false;
