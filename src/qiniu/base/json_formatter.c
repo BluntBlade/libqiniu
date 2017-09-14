@@ -233,7 +233,11 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
 
     switch (fmt->class) {
         case QN_JSON_INTEGER:
+#ifndef QN_CFG_BIG_NUMBERS
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%ld", fmt->val.integer);
+#else
             ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%lld", fmt->val.integer);
+#endif
             break;
 
         case QN_JSON_NUMBER:
