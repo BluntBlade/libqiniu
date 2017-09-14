@@ -18,3 +18,6 @@ target_link_libraries (test_service qiniu cunit crypto curl ssl crypto)
 
 add_executable (test_service_selector test_service_selector.c)
 target_link_libraries (test_service_selector qiniu cunit crypto curl ssl crypto)
+
+add_executable (test_region test_region.c)
+target_link_libraries (test_region qiniu cunit crypto curl ssl crypto)

@@ -57,7 +57,7 @@ QN_SDK qn_region_ptr qn_rgn_duplicate(qn_region_ptr restrict rgn)
     
     if (! (new_rgn = qn_rgn_create())) return NULL;
     for (i = 0; i < QN_SVC_COUNT; i += 1) {
-        if (! (new_rgn->services[i] = qn_svc_duplicate(rgn->services[i]))) {
+        if (rgn->services[i] && ! (new_rgn->services[i] = qn_svc_duplicate(rgn->services[i]))) {
             qn_rgn_destroy(new_rgn);
             return NULL;
         } // if
@@ -68,7 +68,6 @@ QN_SDK qn_region_ptr qn_rgn_duplicate(qn_region_ptr restrict rgn)
 QN_SDK void qn_rgn_set_service(qn_region_ptr restrict rgn, qn_svc_type type, qn_service_ptr restrict svc)
 {
     assert(rgn);
-    assert(svc);
     if (rgn->services[type]) qn_svc_destroy(rgn->services[type]);
     rgn->services[type] = svc;
 }
