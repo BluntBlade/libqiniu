@@ -125,6 +125,7 @@ QN_SDK extern qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, co
 // ---- Declaration of common functions ----
 
 QN_SDK extern void qn_http_check_and_register_connection_failure(qn_svc_selector_ptr restrict sel, qn_svc_entry_ptr restrict ent);
+QN_SDK extern size_t qn_http_read_cfn(void * user_data, char * buf, size_t size);
 
 #ifdef __cplusplus
 }
