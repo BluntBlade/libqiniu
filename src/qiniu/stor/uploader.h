@@ -3,7 +3,7 @@
 
 #include "qiniu/base/io.h"
 #include "qiniu/base/json.h"
-#include "qiniu/service.h"
+#include "qiniu/service_selector.h"
 #include "qiniu/reader.h"
 #include "qiniu/ud/variable.h"
 
@@ -13,6 +13,8 @@
 extern "C"
 {
 #endif
+
+/* ---- Declaration of Uploader (Abbreviation: up) ---- */
 
 typedef struct _QN_UP_EXTRA
 {
@@ -31,7 +33,8 @@ typedef struct _QN_UPLOADER * qn_uploader_ptr;
 
 /* -- Constructor & Destructor methods -- */ 
 
-QN_SDK qn_uploader_ptr qn_up_create(qn_service_ptr restrict svc);
+QN_SDK qn_uploader_ptr qn_up_create(void);
+QN_SDK qn_uploader_ptr qn_up_create_ex(qn_http_connection_ptr restrict conn, qn_svc_selector restrict sel);
 QN_SDK void qn_up_destroy(qn_uploader_ptr restrict up);
 
 /* -- API methods -- */ 
