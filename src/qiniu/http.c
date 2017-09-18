@@ -792,6 +792,16 @@ QN_SDK void qn_http_check_and_register_connection_failure(qn_svc_selector_ptr re
     } // if
 }
 
+QN_SDK size_t qn_http_read_cfn(void * user_data, char * buf, size_t size)
+{
+    qn_io_reader_itf rdr = (qn_io_reader_itf) user_data;
+    ssize_t ret;
+
+    ret = qn_io_rdr_read(rdr, buf, size);
+    if (ret < 0) return CURL_READFUNC_ABORT;
+    return ret;
+}
+
 #ifdef __cplusplus
 }
 #endif
