@@ -1,9 +1,9 @@
-#ifndef __QN_HTTP_H__
-#define __QN_HTTP_H__
+#ifndef __QN_HTTP_CONNECTION_H__
+#define __QN_HTTP_CONNECTION_H__
 
 #include "qiniu/base/string.h"
 #include "qiniu/base/json.h"
-#include "qiniu/http_header.h"
+#include "qiniu/http/header.h"
 #include "qiniu/service_selector.h"
 #include "qiniu/os/file.h"
 
@@ -29,31 +29,6 @@ QN_SDK extern void qn_http_json_wrt_destroy(qn_http_json_writer_ptr restrict wri
 
 QN_SDK extern void qn_http_json_wrt_prepare(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj, qn_json_array_ptr * restrict arr);
 QN_SDK extern size_t qn_http_json_wrt_write_cfn(void * restrict writer, char * restrict buf, size_t buf_size);
-
-// ---- Declaration of HTTP form
-
-struct _QN_HTTP_FORM;
-typedef struct _QN_HTTP_FORM * qn_http_form_ptr;
-
-QN_SDK extern qn_http_form_ptr qn_http_form_create(void);
-QN_SDK extern void qn_http_form_destroy(qn_http_form_ptr restrict form);
-QN_SDK extern void qn_http_form_reset(qn_http_form_ptr restrict form);
-
-QN_SDK extern qn_bool qn_http_form_add_raw(qn_http_form_ptr restrict form, const char * restrict field, qn_size field_size, const char * restrict value, qn_size value_size);
-
-static inline qn_bool qn_http_form_add_text(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, qn_size value_size)
-{
-    return qn_http_form_add_raw(form, field, posix_strlen(field), value, value_size);
-}
-
-static inline qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value)
-{
-    return qn_http_form_add_raw(form, field, posix_strlen(field), value, posix_strlen(value));
-}
-
-QN_SDK extern qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize, const char * restrict mime_type);
-QN_SDK extern qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize, const char * restrict mime_type, void * restrict req);
-QN_SDK extern qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, qn_size buf_size, const char * restrict mime_type);
 
 // ---- Declaration of HTTP request ----
 
@@ -111,16 +86,27 @@ QN_SDK extern void qn_http_resp_unset_header(qn_http_response_ptr restrict resp,
 
 QN_SDK extern void qn_http_resp_set_data_writer(qn_http_response_ptr restrict resp, void * restrict body_writer, qn_http_data_writer_callback_fn body_writer_cb);
 
-// ---- Declaration of HTTP connection ----
+/* ==== Declaration of HTTP Connection (Abbreviation: http_conn) ==== */
 
 struct _QN_HTTP_CONNECTION;
 typedef struct _QN_HTTP_CONNECTION * qn_http_connection_ptr;
 
+/* == Constructor & Destructor methods == */
+
 QN_SDK extern qn_http_connection_ptr qn_http_conn_create(void);
 QN_SDK extern void qn_http_conn_destroy(qn_http_connection_ptr restrict conn);
 
-QN_SDK extern qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
-QN_SDK extern qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
+/* == Get methods == */
+
+QN_SDK extern int qn_http_conn_get_code(qn_http_connection_ptr restrict conn);
+
+/* == Action methods == */
+
+QN_SDK extern qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_header_ptr restrict req_hdr, qn_http_header_ptr restrict resp_hdr, qn_http_body_itf restrict resp_body);
+
+QN_SDK extern qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_header_ptr restrict req_hdr, qn_io_reader_itf restrict req_body, qn_http_header_ptr restrict resp_hdr, qn_http_body_itf restrict resp_body);
+QN_SDK extern qn_bool qn_http_conn_post_form(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_header_ptr restrict req_hdr, qn_http_form_ptr restrict req_body, qn_http_header_ptr restrict resp_hdr, qn_http_body_itf restrict resp_body);
+QN_SDK extern qn_bool qn_http_conn_post_buffer(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_header_ptr restrict req_hdr, const char * restrict req_body, qn_fsize req_body_size, qn_http_header_ptr restrict resp_hdr, qn_http_body_itf restrict resp_body);
 
 // ---- Declaration of common functions ----
 
@@ -131,5 +117,5 @@ QN_SDK extern size_t qn_http_read_cfn(void * user_data, char * buf, size_t size)
 }
 #endif
 
-#endif // __QN_HTTP_H__
+#endif /* __QN_HTTP_CONNECTION_H__ */
 
