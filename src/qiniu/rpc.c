@@ -79,16 +79,35 @@ QN_SDK void qn_rpc_destroy(qn_rpc_ptr restrict rpc)
     } // if
 }
 
-/* -- Setting methods -- */
+/* -- Set & Get methods -- */
 
-QN_SDK qn_bool qn_rpc_set_header(qn_rpc_ptr restrict rpc, const char * restrict hdr, const char * restrict val)
+QN_SDK const char * qn_rpc_get_request_header(qn_rpc_ptr restrict rpc, const char * restrict hdr)
 {
+    assert(rpc);
+    assert(hdr);
+    return qn_http_req_get_header(rpc->req, hdr);
+}
+
+QN_SDK qn_bool qn_rpc_set_request_header(qn_rpc_ptr restrict rpc, const char * restrict hdr, const char * restrict val)
+{
+    assert(rpc);
+    assert(hdr);
+    assert(val);
     return qn_http_req_set_header(rpc->req, hdr, val);
 }
 
-QN_SDK void qn_rpc_unset_header(qn_rpc_ptr restrict rpc, const char * restrict hdr)
+QN_SDK void qn_rpc_unset_request_header(qn_rpc_ptr restrict rpc, const char * restrict hdr)
 {
+    assert(rpc);
+    assert(hdr);
     qn_http_req_unset_header(rpc->req, hdr);
+}
+
+QN_SDK const char * qn_rpc_get_response_header(qn_rpc_ptr restrict rpc, const char * restrict hdr)
+{
+    assert(rpc);
+    assert(hdr);
+    return qn_http_resp_get_header(rpc->resp, hdr);
 }
 
 /* -- Call methods -- */
