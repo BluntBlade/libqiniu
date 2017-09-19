@@ -627,8 +627,8 @@ QN_SDK void qn_http_conn_destroy(qn_http_connection_ptr restrict conn)
 
 static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, void * user_data)
 {
-    qn_http_request_ptr req = (qn_http_request_ptr) user_data;
-    return req->body_rdr_cb(req->body_rdr, ptr, size * nmemb);
+    ssize_t ret = qn_io_rdr_read((qn_io_reader_itf)user_data, ptr, size * nmemb);
+    return (ret < 0) ? CURL_READFUNC_ABORT : ret;
 }
 
 static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp)
