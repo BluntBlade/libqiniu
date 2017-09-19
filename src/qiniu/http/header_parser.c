@@ -7,7 +7,7 @@ extern "C"
 {
 #endif
 
-// ---- Definition of HTTP header scanner ----
+/* ==== Definition of HTTP Header Parser (Abbreviation: http_hdr_prs) ==== */
 
 typedef enum _QN_HTTP_HDR_PRS_STATUS
 {
@@ -39,8 +39,6 @@ typedef struct _QN_HTTP_HDR_SCANNER
     int txt_size;
     qn_http_hdr_status sts;
 } qn_http_hdr_scanner, *qn_http_hdr_scanner_ptr;
-
-// ---- Definition of HTTP header parser ----
 
 typedef enum _QN_HTTP_HDR_FLAGS
 {

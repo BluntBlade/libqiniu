@@ -10,7 +10,7 @@ extern "C"
 {
 #endif
 
-// ---- HTTP Header Functions (abbreviation: http_hdr) ----
+/* ==== Definition of HTTP Header (Abbreviation: http_hdr) ==== */
 
 struct _QN_HTTP_HEADER;
 typedef struct _QN_HTTP_HEADER * qn_http_header_ptr;
@@ -70,7 +70,7 @@ static inline void qn_http_hdr_unset(qn_http_header_ptr restrict hdr, const char
     qn_etbl_unset((qn_etable_ptr) hdr, key);
 }
 
-// ---- HTTP Header Iterator Functions (abbreviation: http_hdr_itr) ----
+/* ==== Definition of HTTP Header Iterator (Abbreviation: http_hdr_itr) ==== */
 
 struct _QN_HTTP_HDR_ITERATOR;
 typedef struct _QN_HTTP_HDR_ITERATOR * qn_http_hdr_iterator_ptr;
@@ -104,5 +104,5 @@ static inline qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr res
 }
 #endif
 
-#endif // __QN_HTTP_HEADER_H__
+#endif /* __QN_HTTP_HEADER_H__ */
 

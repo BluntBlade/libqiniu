@@ -10,7 +10,7 @@ extern "C"
 {
 #endif
 
-// ---- HTTP Header Functions (abbreviation: http_hdr) ----
+/* ==== Definition of HTTP Query (Abbreviation: http_qry) ==== */
 
 struct _QN_HTTP_QUERY;
 typedef struct _QN_HTTP_QUERY * qn_http_query_ptr;
@@ -64,7 +64,7 @@ static inline qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
     return qn_str_join_list("&", qn_etbl_entries((qn_etable_ptr) qry), qn_etbl_count((qn_etable_ptr) qry));
 }
 
-// ---- HTTP Query Iterator Functions (abbreviation: http_hdr_itr) ----
+/* ==== Definition of HTTP Query Iterator (Abbreviation: http_qry_itr) ==== */
 
 struct _QN_HTTP_QRY_ITERATOR;
 typedef struct _QN_HTTP_QRY_ITERATOR * qn_http_qry_iterator_ptr;
@@ -98,4 +98,5 @@ static inline qn_bool qn_http_qry_itr_next_pair_raw(qn_http_qry_iterator_ptr res
 }
 #endif
 
-#endif // __QN_HTTP_QUERY_H__
+#endif /* __QN_HTTP_QUERY_H__ */
+
