@@ -15,6 +15,7 @@ typedef struct _QN_HTTP_FORM
 {
     struct curl_httppost * first;
     struct curl_httppost * last;
+    qn_uint use_data_reader:1;
 } qn_http_form_st;
 
 /* == Constructor & Destructor methods == */
@@ -22,7 +23,7 @@ typedef struct _QN_HTTP_FORM
 QN_SDK qn_http_form_ptr qn_http_form_create(void)
 {
     qn_http_form_ptr new_form = calloc(1, sizeof(qn_http_form_st));
-    if (!new_form) {
+    if (! new_form) {
         qn_err_set_out_of_memory();
         return NULL;
     } // if
@@ -44,6 +45,7 @@ QN_SDK void qn_http_form_reset(qn_http_form_ptr restrict form)
     curl_formfree(form->first);
     form->first = NULL;
     form->last = NULL;
+    form->use_data_reader = 0;
 }
 
 /* == Add methods == */
@@ -122,6 +124,7 @@ QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, cons
         qn_err_http_set_adding_file_field_failed();
         return qn_false;
     } // if
+    form->use_data_reader = 1;
     return qn_true;
 }
 

@@ -24,8 +24,8 @@ typedef struct _QN_HTTP_JSON
 {
     qn_http_body_itf body_vtbl;
     qn_json_parser_ptr prs;
-    qn_json_object_ptr * obj;
-    qn_json_array_ptr * arr;
+    qn_json_object_ptr obj;
+    qn_json_array_ptr arr;
     qn_http_json_status sts;
 } qn_http_json_st;
 
@@ -113,7 +113,7 @@ QN_SDK qn_json_array_ptr qn_http_json_get_array(qn_http_json_ptr restrict body)
 static size_t qn_http_json_parse_object(qn_http_json_ptr body, char * restrict buf, size_t buf_size)
 {
     size_t size = buf_size;
-    if (qn_json_prs_parse_object(body->prs, buf, &size, body->obj)) {
+    if (qn_json_prs_parse_object(body->prs, buf, &size, &body->obj)) {
         /* Parsing object is done. */
         body->sts = QN_HTTP_JSON_PARSING_DONE;
         qn_err_set_succeed();
@@ -134,7 +134,7 @@ static size_t qn_http_json_parse_object(qn_http_json_ptr body, char * restrict b
 static size_t qn_http_json_parse_array(qn_http_json_ptr body, char * restrict buf, size_t buf_size)
 {
     size_t size = buf_size;
-    if (qn_json_prs_parse_array(body->prs, buf, &size, body->arr)) {
+    if (qn_json_prs_parse_array(body->prs, buf, &size, &body->arr)) {
         /* Parsing array is done. */
         body->sts = QN_HTTP_JSON_PARSING_DONE;
         qn_err_set_succeed();
@@ -159,7 +159,7 @@ QN_SDK size_t qn_http_json_parse(qn_http_json_ptr restrict body, char * restrict
     assert(body);
     assert(buf);
 
-    /* TODO: Should consumed_bytes be equal to buf_size ? */
+    // **NOTE**: If the writing is done, or encounter an error, always return the buf_size for consuming all data received.
     switch (body->sts) {
         case QN_HTTP_JSON_PARSING_READY:
             /* Try to parse as a JSON object first. */
