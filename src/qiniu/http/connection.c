@@ -1,33 +1,26 @@
-#include <stdarg.h>
-#include <strings.h>
-#include <ctype.h>
+#include <assert.h>
 #include <curl/curl.h>
 
 #include "qiniu/base/string.h"
 #include "qiniu/base/json.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/errors.h"
-#include "qiniu/http_header.h"
-#include "qiniu/http_header_parser.h"
-#include "qiniu/http.h"
+
+#include "qiniu/http/header.h"
+#include "qiniu/http/connection.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-/* ==== Definition of HTTP Connection (Abbreviation: http) ==== */
+/* ==== Definition of HTTP Connection (Abbreviation: http_conn) ==== */
 
 typedef struct _QN_HTTP_CONNECTION
 {
-    int port;
-    qn_string ip;
-    qn_string host;
-    qn_string url_prefix;
-
     struct
     {
-        int code;
+        qn_uint code;
         qn_string ver;
         qn_string msg;
     } http;
@@ -50,7 +43,7 @@ QN_SDK qn_http_connection_ptr qn_http_conn_create(void)
     if (! new_conn) {
         qn_err_set_out_of_memory();
         return NULL;
-    } // if
+    } /* if */
 
     new_conn->curl = curl_easy_init();
     if (! new_conn->curl) {
@@ -68,23 +61,26 @@ QN_SDK void qn_http_conn_destroy(qn_http_connection_ptr restrict conn)
         if (conn->http.ver) qn_str_destroy(conn->http.ver);
         curl_easy_cleanup(conn->curl);
         free(conn);
-    } // if
+    } /* if */
 }
 
 /* == Get methods == */
 
-QN_SDK int qn_http_conn_get_code(qn_http_connection_ptr restrict conn)
+QN_SDK qn_uint qn_http_conn_get_code(qn_http_connection_ptr restrict conn)
 {
+    assert(conn);
     return conn->http.code;
 }
 
 QN_SDK qn_string qn_http_conn_get_version(qn_http_connection_ptr restrict conn)
 {
+    assert(conn);
     return conn->http.ver;
 }
 
 QN_SDK qn_string qn_http_conn_get_message(qn_http_connection_ptr restrict conn)
 {
+    assert(conn);
     return conn->http.msg;
 }
 
@@ -119,7 +115,7 @@ static size_t qn_http_conn_write_response_head_cfn(char * buf, size_t size, size
         if (! begin) return 0;
         begin += 1;
         end = strchr(begin, ' ');
-        if (!end) return 0;
+        if (! end) return 0;
         if (! (conn->http.ver = qn_cs_clone(begin, end - begin))) return 0;
 
         /* Pase HTTP code. */
@@ -130,7 +126,7 @@ static size_t qn_http_conn_write_response_head_cfn(char * buf, size_t size, size
         for (i = 0; i < end - begin; i += 1) {
             if (! isdigit(begin[i])) return 0;
             conn->http.code = conn->http.code * 10 + (begin[i] - '0');
-        } // for
+        } /* for */
 
         /* Pase HTTP message. */
         begin = end + 1;
@@ -146,7 +142,7 @@ static size_t qn_http_conn_write_response_head_cfn(char * buf, size_t size, size
         if (! end) {
             if ((begin[0] == '\r' && begin[1] == '\n') || begin[0] == '\n') return buf_size;
             return 0;
-        } // if
+        } /* if */
 
         while (isspace(begin[0])) begin += 1;
         while (isspace(end[-1])) end -= 1;
@@ -158,7 +154,7 @@ static size_t qn_http_conn_write_response_head_cfn(char * buf, size_t size, size
         while (isspace(val_end[-1])) val_end -= 1;
 
         if (! qn_http_hdr_set_raw(conn->resp.hdr, begin, end - begin, val_begin, val_end - val_begin)) return 0;
-    } // if
+    } /* if */
     return buf_size;
 }
 
@@ -167,11 +163,11 @@ static inline qn_bool qn_http_conn_prepare(qn_http_connection_ptr restrict conn,
     if (conn->http.ver) {
         qn_str_destroy(conn->http.ver);
         conn->http.ver = NULL;
-    } // if
+    } /* if */
     if (conn->http.msg) {
         qn_str_destroy(conn->http.msg);
         conn->http.msg = NULL;
-    } // if
+    } /* if */
     conn->resp.hdr = NULL;
 
     curl_easy_reset(conn->curl);
@@ -179,11 +175,11 @@ static inline qn_bool qn_http_conn_prepare(qn_http_connection_ptr restrict conn,
     if ((curl_code = curl_easy_setopt(new_conn->curl, CURLOPT_NOSIGNAL, 1L)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_URL, url)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     return qn_true;
 }
 
@@ -200,28 +196,28 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HEADERFUNCTION, qn_http_conn_write_response_head_cfn)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HEADERDATA, conn)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
 
     /* Prepare for writting response body. */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_conn_write_response_body_cfn)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp_body)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
 
     /* Prepare for sending request headers. */
     if (qn_http_hdr_count(req->hdr) > 0) {
         if (! (itr = qn_http_hdr_itr_create(req->hdr))) {
             curl_slist_free_all(headers);
             return qn_false;
-        } // if
+        } /* if */
 
         while ((entry = qn_http_hdr_itr_next_entry(itr))) {
             headers2 = curl_slist_append(headers, entry);
@@ -230,17 +226,17 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
                 curl_slist_free_all(headers);
                 qn_http_hdr_itr_destroy(itr);
                 return qn_false;
-            } // if
+            } /* if */
             headers = headers2;
-        } // while
+        } /* while */
 
         qn_http_hdr_itr_destroy(itr);
-    } // if
+    } /* if */
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HTTPHEADER, headers)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
 
     curl_code = curl_easy_perform(conn->curl);
     curl_slist_free_all(headers);
@@ -261,9 +257,9 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
                 qn_err_comm_set_transmission_failed();
                 return qn_false;
 
-            // case CURLE_HTTP2:
-            // case CURLE_HTTP2_STREAM:
-            // case CURLE_SSL_CONNECT_ERROR:
+            /* case CURLE_HTTP2: */
+            /* case CURLE_HTTP2_STREAM: */
+            /* case CURLE_SSL_CONNECT_ERROR: */
             case CURLE_PARTIAL_FILE:
                 qn_err_http_set_mismatching_file_size();
                 return qn_false;
@@ -271,8 +267,8 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
             default:
                 qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
                 break;
-        } // switch
-    } // if
+        } /* switch */
+    } /* if */
     return qn_true;
 }
 
@@ -280,12 +276,18 @@ QN_SDK qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const char
 {
     CURLcode curl_code = CURLE_OK;
 
+    assert(conn);
+    assert(url);
+    assert(req_hdr);
+    assert(resp_hdr);
+    assert(resp_body);
+
     if (! qn_http_conn_prepare(conn, url)) return qn_false;
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POST, 0)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     return qn_http_conn_do_request(conn, req_hdr, resp_hdr, resp_body);
 }
 
@@ -293,20 +295,27 @@ QN_SDK qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const cha
 {
     CURLcode curl_code = CURLE_OK;
 
+    assert(conn);
+    assert(url);
+    assert(req_hdr);
+    assert(req_body);
+    assert(resp_hdr);
+    assert(resp_body);
+
     if (! qn_http_conn_prepare(conn, url)) return qn_false;
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POST, 1)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_read_data_cfn)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_READDATA, req_body)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     return qn_http_conn_do_request(conn, req_hdr, resp_hdr, resp_body);
 }
 
@@ -314,22 +323,29 @@ QN_SDK qn_bool qn_http_conn_post_form(qn_http_connection_ptr restrict conn, cons
 {
     CURLcode curl_code = CURLE_OK;
 
+    assert(conn);
+    assert(url);
+    assert(req_hdr);
+    assert(req_body);
+    assert(resp_hdr);
+    assert(resp_body);
+
     if (! qn_http_conn_prepare(conn, url)) return qn_false;
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POST, 1)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HTTPPOST, form->first)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if (form->use_data_reader) {
         if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_read_data_cfn)) != CURLE_OK) {
             qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
             return qn_false;
-        } // if
-    } // if
+        } /* if */
+    } /* if */
     return qn_http_conn_do_request(conn, req_hdr, resp_hdr, resp_body);
 }
 
@@ -337,29 +353,35 @@ QN_SDK qn_bool qn_http_conn_post_buffer(qn_http_connection_ptr restrict conn, co
 {
     CURLcode curl_code = CURLE_OK;
 
+    assert(conn);
+    assert(url);
+    assert(req_hdr);
+    assert(req_body);
+    assert(resp_hdr);
+    assert(resp_body);
+
     if (! qn_http_conn_prepare(conn, url)) return qn_false;
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POST, 1)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDS, req_body)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDSIZE, (long)req_body_size)) != CURLE_OK) {
         qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
-    } // if
+    } /* if */
     return qn_http_conn_do_request(conn, req_hdr, resp_hdr, resp_body);
 }
 
 /* == Check Functions == */
 
-QN_SDK bool qn_http_failed_in_communication(void)
+QN_SDK qn_bool qn_http_failed_in_communication(void)
 {
-    if (qn_err_is_try_again() || qn_err_comm_is_transmission_failed()) return qn_true;
-    return qn_false;
+    return (qn_err_is_try_again() || qn_err_comm_is_transmission_failed());
 }
 
 #ifdef __cplusplus
