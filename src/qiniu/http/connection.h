@@ -24,7 +24,7 @@ QN_SDK extern void qn_http_conn_destroy(qn_http_connection_ptr restrict conn);
 
 /* == Get methods == */
 
-QN_SDK extern int qn_http_conn_get_code(qn_http_connection_ptr restrict conn);
+QN_SDK extern qn_uint qn_http_conn_get_code(qn_http_connection_ptr restrict conn);
 QN_SDK extern qn_string qn_http_conn_get_version(qn_http_connection_ptr restrict conn);
 QN_SDK extern qn_string qn_http_conn_get_message(qn_http_connection_ptr restrict conn);
 
@@ -38,7 +38,7 @@ QN_SDK extern qn_bool qn_http_conn_post_buffer(qn_http_connection_ptr restrict c
 
 /* == Check Functions == */
 
-QN_SDK extern bool qn_http_failed_in_communication(void);
+QN_SDK extern qn_bool qn_http_failed_in_communication(void);
 
 #ifdef __cplusplus
 }
