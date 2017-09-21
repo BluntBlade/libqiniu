@@ -76,7 +76,7 @@ QN_SDK qn_bool qn_http_form_add_raw(qn_http_form_ptr restrict form, const char *
 static inline const char * qn_http_get_fname_utf8(const char * restrict fname)
 {
     const char * fname_utf8;
-    if (!fname) return "LIBQINIU-MANDATORY-FILENAME";
+    if (! fname) return "LIBQINIU-MANDATORY-FILENAME";
 #ifdef QN_OS_WINDOWS
     return ((fname_utf8 = strrchr(fname, '\\'))) ? fname_utf8 + 1 : fname;
 #else
@@ -146,7 +146,7 @@ QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const cha
 
     if (! mime_type) mime_type = "application/octet-stream";
     
-    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_CONTENTTYPE, mime_type, CURLFORM_END);
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, (long)buf_size, CURLFORM_CONTENTTYPE, mime_type, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_buffer_field_failed();
         return qn_false;
