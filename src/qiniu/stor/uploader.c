@@ -131,6 +131,15 @@ QN_SDK qn_bool qn_up_set_service_entry(qn_json_object_ptr restrict ext, qn_svc_e
 
 /* -- API methods -- */ 
 
+static int qn_up_user_defined_variables_iterator_cfn(void * user_data, qn_json_class cls, qn_json_variant_ptr restrict val)
+{
+    qn_http_form_ptr form = (qn_http_form_ptr) user_data;
+    if (cls == QN_JSON_STRING) {
+        if (! qn_http_form_add_string(form, "crc32", val.string)) return QN_JSON_ITR_NO_MORE;
+    } // if
+    return QN_JSON_ITR_OK;
+}
+
 static qn_bool qn_up_set_arguments(qn_http_form_ptr restrict form, qn_json_object_ptr restrict ext)
 {
     int i = 0;
