@@ -27,25 +27,6 @@ extern "C"
 /* ==== Declaration of JSON (Abbreviation: json) ==== */
 
 /***************************************************************************//**
-* @defgroup JSON-Object Implementation of JSON Object
-*
-* The **qn_json_object_ptr** type represents a JSON object. Use this type to
-* collect a set of pairs of key and value. The maximum quantity of pairs is
-* 65535.
-*******************************************************************************/
-
-/***************************************************************************//**
-* @defgroup JSON-Array Implementation of JSON Array
-*
-* The **qn_json_array_ptr** type represents a JSON array. Use this type to
-* collect a list of values. The maximum quantity of values is 65535.
-* This type can be used as a **bidirectional queue**.
-*******************************************************************************/
-
-struct _QN_JSON_ARRAY;
-typedef struct _QN_JSON_ARRAY * qn_json_array_ptr;
-
-/***************************************************************************//**
 * @defgroup JSON-Variant Implementation of JSON Variant
 *
 * The **qn_json_variant_ptr** type represents a JSON variant used to save a
@@ -70,6 +51,14 @@ typedef enum _QN_JSON_TYPE {
 
 /* ==== Declaration of JSON Object ==== */
 
+/***************************************************************************//**
+* @defgroup JSON-Object Implementation of JSON Object
+*
+* The **qn_json_object_ptr** type represents a JSON object. Use this type to
+* collect a set of pairs of key and value. The maximum quantity of pairs is
+* 65535.
+*******************************************************************************/
+
 struct _QN_JSON_OBJECT;
 typedef struct _QN_JSON_OBJECT * qn_json_object_ptr;
 
@@ -82,7 +71,7 @@ QN_SDK extern void qn_json_destroy_object(qn_json_object_ptr restrict obj);
 
 /* == Property methods == */
 
-QN_SDK extern qn_uint32 qn_json_object_size(qn_json_object_ptr restrict obj);
+QN_SDK extern qn_uint qn_json_object_size(qn_json_object_ptr restrict obj);
 
 static inline qn_bool qn_json_is_empty_object(qn_json_object_ptr restrict obj)
 {
@@ -99,6 +88,8 @@ QN_SDK extern qn_json_integer qn_json_get_integer(qn_json_object_ptr restrict ob
 QN_SDK extern qn_json_number qn_json_get_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_number default_val);
 QN_SDK extern qn_bool qn_json_get_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool default_val);
 
+/* ==== */
+
 QN_SDK extern qn_bool qn_json_set_object(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_object_ptr restrict val);
 QN_SDK extern qn_bool qn_json_set_array(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_array_ptr restrict val);
 QN_SDK extern qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * restrict key, qn_string restrict val);
@@ -109,155 +100,64 @@ QN_SDK extern qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const 
 QN_SDK extern qn_bool qn_json_set_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool val);
 QN_SDK extern qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const char * restrict key);
 
-// ----
+/* ==== */
 
 QN_SDK extern void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict key);
 
 QN_SDK extern qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * restrict old_key, const char * new_key);
 
-// ---- Declaration of JSON Array ----
+/* ==== Declaration of JSON Array ==== */
 
-QN_SDK extern qn_json_array_ptr qn_json_immutable_empty_array(void);
+/***************************************************************************//**
+* @defgroup JSON-Array Implementation of JSON Array
+*
+* The **qn_json_array_ptr** type represents a JSON array. Use this type to
+* collect a list of values. The maximum quantity of values is 65535.
+* This type can be used as a **bidirectional queue**.
+*******************************************************************************/
+
+struct _QN_JSON_ARRAY;
+typedef struct _QN_JSON_ARRAY * qn_json_array_ptr;
+
+/* == Constructor & Destructor methods == */
+
 QN_SDK extern qn_json_array_ptr qn_json_create_array(void);
-
 QN_SDK extern qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restrict arr);
 QN_SDK extern qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restrict arr);
 QN_SDK extern qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr restrict arr);
 QN_SDK extern qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr restrict arr);
-
 QN_SDK extern void qn_json_destroy_array(qn_json_array_ptr restrict arr);
 
-QN_SDK extern int qn_json_size_array(qn_json_array_ptr restrict arr);
+/* == Property methods == */
+
+QN_SDK extern qn_uint qn_json_array_size(qn_json_array_ptr restrict arr);
 
 static inline qn_bool qn_json_is_empty_array(qn_json_array_ptr restrict obj)
 {
-    return qn_json_size_array(obj) == 0;
+    return qn_json_array_size(obj) == 0;
 }
 
-QN_SDK extern qn_json_variant_ptr qn_json_pick_variant(qn_json_array_ptr restrict arr, int n, qn_json_type cls);
+/* == Set & Get methods == */
 
-static inline qn_json_object_ptr qn_json_pick_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_OBJECT);
-    return (elem) ? elem->object : default_val;
-}
+QN_SDK extern qn_json_object_ptr qn_json_pick_object(qn_json_array_ptr restrict arr, qn_uint n, qn_json_object_ptr restrict default_val);
+QN_SDK extern qn_json_array_ptr qn_json_pick_array(qn_json_array_ptr restrict arr, qn_uint n, qn_json_array_ptr restrict default_val);
+QN_SDK extern qn_string qn_json_pick_string(qn_json_array_ptr restrict arr, qn_uint n, qn_string restrict default_val);
+QN_SDK extern const char * qn_json_pick_cstr(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict default_val);
+QN_SDK extern qn_json_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, qn_uint n, qn_json_integer default_val);
+QN_SDK extern qn_json_number qn_json_pick_number(qn_json_array_ptr restrict arr, qn_uint n, qn_json_number default_val);
+QN_SDK extern qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, qn_uint n, qn_bool default_val);
 
-static inline qn_json_array_ptr qn_json_pick_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_ARRAY);
-    return (elem) ? elem->array : default_val;
-}
+/* ==== */
 
-static inline qn_string qn_json_pick_string(qn_json_array_ptr restrict arr, int n, qn_string restrict default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_STRING);
-    return (elem) ? elem->string : default_val;
-}
-
-static inline const char * qn_json_pick_cstr(qn_json_array_ptr restrict arr, int n, const char * restrict default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_STRING);
-    return (elem) ? qn_str_cstr(elem->string) : default_val;
-}
-
-static inline qn_json_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_INTEGER);
-    return (elem) ? elem->integer : default_val;
-}
-
-static inline qn_json_number qn_json_pick_number(qn_json_array_ptr restrict arr, int n, qn_json_number default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_NUMBER);
-    return (elem) ? elem->number : default_val;
-}
-
-static inline qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, int n, qn_bool default_val)
-{
-    qn_json_variant_ptr elem = qn_json_pick_variant(arr, n, QN_JSON_BOOLEAN);
-    return (elem) ? elem->boolean : default_val;
-}
-
-// ----
-
-QN_SDK extern qn_bool qn_json_push_variant(qn_json_array_ptr restrict arr, qn_json_type cls, qn_json_variant new_elem);
-
-static inline qn_bool qn_json_push_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val)
-{
-    qn_json_variant new_elem;
-    new_elem.object = val;
-    return qn_json_push_variant(arr, QN_JSON_OBJECT, new_elem);
-}
-
-static inline qn_bool qn_json_push_array(qn_json_array_ptr restrict arr, qn_json_array_ptr restrict val)
-{
-    qn_json_variant new_elem;
-    new_elem.array = val;
-    return qn_json_push_variant(arr, QN_JSON_ARRAY, new_elem);
-}
-
-static inline qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, qn_string restrict val)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_str_duplicate(val))) return qn_false;
-    if (! qn_json_push_variant(arr, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_push_cstr(qn_json_array_ptr restrict arr, const char * restrict val)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_cs_duplicate(val))) return qn_false;
-    if (! qn_json_push_variant(arr, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_cs_clone(val, size))) return qn_false;
-    if (! qn_json_push_variant(arr, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_json_integer val)
-{
-    qn_json_variant new_elem;
-    new_elem.integer = val;
-    return qn_json_push_variant(arr, QN_JSON_INTEGER, new_elem);
-}
-
-static inline qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_json_number val)
-{
-    qn_json_variant new_elem;
-    new_elem.number = val;
-    return qn_json_push_variant(arr, QN_JSON_NUMBER, new_elem);
-}
-
-static inline qn_bool qn_json_push_boolean(qn_json_array_ptr restrict arr, qn_bool val)
-{
-    qn_json_variant new_elem;
-    new_elem.boolean = val;
-    return qn_json_push_variant(arr, QN_JSON_BOOLEAN, new_elem);
-}
-
-static inline qn_bool qn_json_push_null(qn_json_array_ptr restrict arr)
-{
-    qn_json_variant new_elem;
-    new_elem.integer = 0;
-    return qn_json_push_variant(arr, QN_JSON_NULL, new_elem);
-}
-
-// ----
+QN_SDK extern qn_bool qn_json_push_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val);
+QN_SDK extern qn_bool qn_json_push_array(qn_json_array_ptr restrict arr, qn_json_array_ptr restrict val);
+QN_SDK extern qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, qn_string restrict val);
+QN_SDK extern qn_bool qn_json_push_cstr(qn_json_array_ptr restrict arr, const char * restrict val);
+QN_SDK extern qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size);
+QN_SDK extern qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_json_integer val);
+QN_SDK extern qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_json_number val);
+QN_SDK extern qn_bool qn_json_push_boolean(qn_json_array_ptr restrict arr, qn_bool val);
+QN_SDK extern qn_bool qn_json_push_null(qn_json_array_ptr restrict arr);
 
 QN_SDK extern void qn_json_pop(qn_json_array_ptr restrict arr);
 
