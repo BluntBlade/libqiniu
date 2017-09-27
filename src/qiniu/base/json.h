@@ -161,167 +161,31 @@ QN_SDK extern qn_bool qn_json_push_null(qn_json_array_ptr restrict arr);
 
 QN_SDK extern void qn_json_pop(qn_json_array_ptr restrict arr);
 
-// ----
+/* ==== */
 
-QN_SDK extern qn_bool qn_json_unshift_variant(qn_json_array_ptr restrict arr, qn_json_type cls, qn_json_variant new_elem);
-
-static inline qn_bool qn_json_unshift_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val)
-{
-    qn_json_variant new_elem;
-    new_elem.object = val;
-    return qn_json_unshift_variant(arr, QN_JSON_OBJECT, new_elem);
-}
-
-static inline qn_bool qn_json_unshift_array(qn_json_array_ptr restrict arr, qn_json_array_ptr restrict val)
-{
-    qn_json_variant new_elem;
-    new_elem.array = val;
-    return qn_json_unshift_variant(arr, QN_JSON_ARRAY, new_elem);
-}
-
-static inline qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, qn_string restrict val)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_str_duplicate(val))) return qn_false;
-    if (! qn_json_unshift_variant(arr, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_unshift_cstr(qn_json_array_ptr restrict arr, const char * restrict val)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_cs_duplicate(val))) return qn_false;
-    if (! qn_json_unshift_variant(arr, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_cs_clone(val, size))) return qn_false;
-    if (! qn_json_unshift_variant(arr, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_json_integer val)
-{
-    qn_json_variant new_elem;
-    new_elem.integer = val;
-    return qn_json_unshift_variant(arr, QN_JSON_INTEGER, new_elem);
-}
-
-static inline qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_json_number val)
-{
-    qn_json_variant new_elem;
-    new_elem.number = val;
-    return qn_json_unshift_variant(arr, QN_JSON_NUMBER, new_elem);
-}
-
-static inline qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val)
-{
-    qn_json_variant new_elem;
-    new_elem.boolean = val;
-    return qn_json_unshift_variant(arr, QN_JSON_BOOLEAN, new_elem);
-}
-
-static inline qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr)
-{
-    qn_json_variant new_elem;
-    new_elem.integer = 0;
-    return qn_json_unshift_variant(arr, QN_JSON_NULL, new_elem);
-}
-
-// ----
+QN_SDK extern qn_bool qn_json_unshift_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val);
+QN_SDK extern qn_bool qn_json_unshift_array(qn_json_array_ptr restrict arr, qn_json_array_ptr restrict val);
+QN_SDK extern qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, qn_string restrict val);
+QN_SDK extern qn_bool qn_json_unshift_cstr(qn_json_array_ptr restrict arr, const char * restrict val);
+QN_SDK extern qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size);
+QN_SDK extern qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_json_integer val);
+QN_SDK extern qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_json_number val);
+QN_SDK extern qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val);
+QN_SDK extern qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr);
 
 QN_SDK extern void qn_json_shift(qn_json_array_ptr restrict arr);
 
-// ----
+/* ==== */
 
-QN_SDK extern qn_bool qn_json_replace_variant(qn_json_array_ptr restrict arr, int n, qn_json_type cls, qn_json_variant new_elem);
-
-static inline qn_bool qn_json_replace_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict val)
-{
-    qn_json_variant new_elem;
-    new_elem.object = val;
-    return qn_json_replace_variant(arr, n, QN_JSON_OBJECT, new_elem);
-}
-
-static inline qn_bool qn_json_replace_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict val)
-{
-    qn_json_variant new_elem;
-    new_elem.array = val;
-    return qn_json_replace_variant(arr, n, QN_JSON_ARRAY, new_elem);
-}
-
-static inline qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, int n, qn_string restrict val)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_str_duplicate(val))) return qn_false;
-    if (! qn_json_replace_variant(arr, n, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_replace_cstr(qn_json_array_ptr restrict arr, int n, const char * restrict val)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_cs_duplicate(val))) return qn_false;
-    if (! qn_json_replace_variant(arr, n, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n, const char * restrict val, qn_size size)
-{
-    qn_json_variant new_elem;
-    if (! (new_elem.string = qn_cs_clone(val, size))) return qn_false;
-    if (! qn_json_replace_variant(arr, n, QN_JSON_STRING, new_elem)) {
-        qn_str_destroy(new_elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-static inline qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val)
-{
-    qn_json_variant new_elem;
-    new_elem.integer = val;
-    return qn_json_replace_variant(arr, n, QN_JSON_INTEGER, new_elem);
-}
-
-static inline qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val)
-{
-    qn_json_variant new_elem;
-    new_elem.number = val;
-    return qn_json_replace_variant(arr, n, QN_JSON_NUMBER, new_elem);
-}
-
-static inline qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val)
-{
-    qn_json_variant new_elem;
-    new_elem.boolean = val;
-    return qn_json_replace_variant(arr, n, QN_JSON_BOOLEAN, new_elem);
-}
-
-static inline qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n)
-{
-    qn_json_variant new_elem;
-    new_elem.integer = 0;
-    return qn_json_replace_variant(arr, n, QN_JSON_NULL, new_elem);
-}
+QN_SDK extern qn_bool qn_json_replace_object(qn_json_array_ptr restrict arr, qn_uint n, qn_json_object_ptr restrict val);
+QN_SDK extern qn_bool qn_json_replace_array(qn_json_array_ptr restrict arr, qn_uint n, qn_json_array_ptr restrict val);
+QN_SDK extern qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, qn_uint n, qn_string restrict val);
+QN_SDK extern qn_bool qn_json_replace_cstr(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict val);
+QN_SDK extern qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict val, qn_size size);
+QN_SDK extern qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val);
+QN_SDK extern qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val);
+QN_SDK extern qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val);
+QN_SDK extern qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n);
 
 /***************************************************************************//**
 * @defgroup JSON-Iterator Implementation of JSON Object and Array Iterator
