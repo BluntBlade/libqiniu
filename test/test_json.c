@@ -24,56 +24,56 @@ void test_manipulate_object(void)
     // set a string element
     ret = qn_json_set_text(obj_root, "_str", buf, buf_len);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 1);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 1);
 
     // set a number element
     ret = qn_json_set_number(obj_root, "_num", -9.99L);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 2);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 2);
 
     // set a integer element
     ret = qn_json_set_integer(obj_root, "_int", 256);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 3);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 3);
 
     // set a null element
     ret = qn_json_set_null(obj_root, "_null");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 4);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 4);
 
     // set a boolean element
     ret = qn_json_set_boolean(obj_root, "_false", qn_false);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 5);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 5);
 
     // check the null element
     qn_json_unset(obj_root, "_null");
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 4);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 4);
 
     // check the integer element
     CU_ASSERT_EQUAL(qn_json_get_integer(obj_root, "_int", 0), 256);
 
     qn_json_unset(obj_root, "_int");
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 3);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 3);
 
     // check the number element
     CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_get_number(obj_root, "_num", 0.0L), -9.99L, 0.01L);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 3);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 3);
 
     // check the string element
     str = qn_json_get_string(obj_root, "_str", NULL);
     CU_ASSERT_TRUE(str != NULL);
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), buf) == 0);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 3);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 3);
 
     qn_json_unset(obj_root, "_false");
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 2);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 2);
 
     qn_json_unset(obj_root, "_str");
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 1);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 1);
 
     qn_json_unset(obj_root, "_num");
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 0);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 0);
 
     qn_json_destroy_object(obj_root);
 }
@@ -368,12 +368,12 @@ void test_obj_set()
     // push a string element
     ret = qn_json_set_text(obj_root, "_str", buf, buf_len);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 1);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 1);
 
     // push a integer element
     ret = qn_json_set_integer(obj_root, "_int", 123);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 2);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 2);
 
     // ----
 
@@ -394,7 +394,7 @@ void test_obj_set()
 
     obj_ret = qn_json_get_object(obj_root, "_str", NULL);
     CU_ASSERT_PTR_NOT_NULL(obj_ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_ret), 1);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_ret), 1);
 
     str_ret = qn_json_get_string(obj_root, "_str", NULL);
     CU_ASSERT_PTR_NULL(str_ret);
@@ -406,7 +406,7 @@ void test_obj_set()
 
     arr_ret = qn_json_get_array(obj_root, "_int", NULL);
     CU_ASSERT_PTR_NOT_NULL(arr_ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_ret), 1);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_ret), 1);
 
     int_ret = qn_json_get_integer(obj_root, "_int", -1);
     CU_ASSERT_EQUAL(int_ret, -1);
@@ -430,31 +430,31 @@ void test_manipulate_array(void)
     // unshift a string element
     ret = qn_json_unshift_text(arr_root, buf, buf_len);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 1);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 1);
 
     // push a number element
     ret = qn_json_push_number(arr_root, -9.99L);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 2);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     // push a integer element
     ret = qn_json_push_integer(arr_root, 256);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 3);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 3);
 
     // unshift a null element
     ret = qn_json_unshift_null(arr_root);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 4);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 4);
 
     // push a boolean element
     ret = qn_json_push_boolean(arr_root, qn_false);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 5);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 5);
 
     // check the first element (null)
     qn_json_shift(arr_root);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 4);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 4);
 
     // check the second element (string)
     str = qn_json_pick_string(arr_root, 0, NULL);
@@ -462,21 +462,21 @@ void test_manipulate_array(void)
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), buf) == 0);
 
     qn_json_shift(arr_root);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 3);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 3);
 
     // check the last element (boolean == false)
     CU_ASSERT_TRUE(qn_json_pick_boolean(arr_root, 2, qn_true) == qn_false);
     qn_json_pop(arr_root);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 2);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     // check the last element (int == 256)
     CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) != 0);
     CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) == 256);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 2);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     // check the first element
     CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_pick_number(arr_root, 0, 0.0L), -9.99L, 0.01L);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 2);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     qn_json_destroy_array(arr_root);
 }
@@ -502,12 +502,12 @@ void test_arr_replace()
     // push a string element
     ret = qn_json_push_text(arr_root, buf, buf_len);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 1);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 1);
 
     // push a integer element
     ret = qn_json_push_integer(arr_root, 123);
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 2);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     // ----
 
@@ -528,7 +528,7 @@ void test_arr_replace()
 
     obj_ret = qn_json_pick_object(arr_root, 0, NULL);
     CU_ASSERT_PTR_NOT_NULL(obj_ret);
-    CU_ASSERT_EQUAL(qn_json_size_object(obj_ret), 1);
+    CU_ASSERT_EQUAL(qn_json_object_size(obj_ret), 1);
 
     str_ret = qn_json_pick_string(arr_root, 0, NULL);
     CU_ASSERT_PTR_NULL(str_ret);
@@ -540,7 +540,7 @@ void test_arr_replace()
 
     arr_ret = qn_json_pick_array(arr_root, 1, NULL);
     CU_ASSERT_PTR_NOT_NULL(arr_ret);
-    CU_ASSERT_EQUAL(qn_json_size_array(arr_ret), 1);
+    CU_ASSERT_EQUAL(qn_json_array_size(arr_ret), 1);
 
     int_ret = qn_json_pick_integer(arr_root, 1, -1);
     CU_ASSERT_EQUAL(int_ret, -1);
@@ -1619,25 +1619,6 @@ void test_format_empty_object(void)
     qn_json_fmt_destroy(fmt);
 }
 
-void test_format_immutable_object(void)
-{
-    qn_bool ret = qn_false;
-    qn_json_object_ptr obj_root = qn_json_immutable_empty_object();
-    qn_json_formatter_ptr fmt = NULL;
-    char buf[128];
-    qn_size buf_size = sizeof(buf);
-
-    fmt = qn_json_fmt_create();
-    CU_ASSERT_FATAL(fmt != NULL);
-
-    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
-    CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL_FATAL(buf_size, 2);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{}", 2), 0);
-
-    qn_json_fmt_destroy(fmt);
-}
-
 void test_format_object_holding_string_element(void)
 {
     qn_bool ret = qn_false;
@@ -1852,25 +1833,6 @@ void test_format_empty_array(void)
     qn_json_fmt_destroy(fmt);
 }
 
-void test_format_immutable_array(void)
-{
-    qn_bool ret = qn_false;
-    qn_json_array_ptr arr_root = qn_json_immutable_empty_array();
-    qn_json_formatter_ptr fmt = NULL;
-    char buf[128];
-    qn_size buf_size = sizeof(buf);
-
-    fmt = qn_json_fmt_create();
-    CU_ASSERT_FATAL(fmt != NULL);
-
-    ret = qn_json_fmt_format_array(fmt, arr_root, buf, &buf_size);
-    CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL_FATAL(buf_size, 2);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[]", 2), 0);
-
-    qn_json_fmt_destroy(fmt);
-}
-
 void test_format_array_holding_string_element(void)
 {
     qn_bool ret = qn_false;
@@ -2080,7 +2042,6 @@ void test_format_array_holding_complex_element(void)
 
 CU_TestInfo test_normal_cases_of_json_formatting[] = {
     {"test_format_empty_object()", test_format_empty_object},
-    {"test_format_immutable_object()", test_format_immutable_object},
     {"test_format_object_holding_string_element()", test_format_object_holding_string_element},
     {"test_format_object_holding_integer_element()", test_format_object_holding_integer_element},
     {"test_format_object_holding_number_element()", test_format_object_holding_number_element},
@@ -2089,7 +2050,6 @@ CU_TestInfo test_normal_cases_of_json_formatting[] = {
     {"test_format_object_holding_string_contains_double_quotes()", test_format_object_holding_string_contains_double_quotes},
     {"test_format_object_holding_string_contains_backslash()", test_format_object_holding_string_contains_backslash},
     {"test_format_empty_array()", test_format_empty_array},
-    {"test_format_immutable_array()", test_format_immutable_array},
     {"test_format_array_holding_string_element()", test_format_array_holding_string_element},
     {"test_format_array_holding_integer_element()", test_format_array_holding_integer_element},
     {"test_format_array_holding_number_element()", test_format_array_holding_number_element},

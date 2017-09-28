@@ -32,18 +32,12 @@ static inline qn_uint32 qn_json_round_to_multiple_of_8(qn_uint32 n)
 
 /* ==== Definition of JSON Variant ==== */
 
-typedef union _QN_JSON_VARIANT
-{
-    qn_json_object_ptr object;
-    qn_json_array_ptr array;
-    qn_json_string string;
-    qn_json_integer integer;
-    qn_json_number number;
-    qn_json_boolean boolean;
-} qn_json_variant_un, *qn_json_variant_ptr;
-
-typedef qn_uint32 qn_json_hash;
-typedef unsigned short int qn_uint32;
+/***************************************************************************//**
+* @defgroup JSON-Variant Implementation of JSON Variant
+*
+* The **qn_json_variant_ptr** type represents a JSON variant used to save a
+* JSON value.
+*******************************************************************************/
 
 static inline void qn_json_destroy_variant(qn_json_type type, qn_json_variant_ptr restrict var)
 {
@@ -55,7 +49,7 @@ static inline void qn_json_destroy_variant(qn_json_type type, qn_json_variant_pt
     } // switch
 }
 
-typedef _QN_JSON_ATTRIBUTE
+typedef struct _QN_JSON_ATTRIBUTE
 {
     unsigned char type:4;
 } qn_json_attribute_st, *qn_json_attribute_ptr;
@@ -75,9 +69,11 @@ typedef struct _QN_JSON_OBJECT
     qn_json_attribute_st attributes[QN_JSON_OBJ_DEFAULT_CAPACITY];
 } qn_json_object_st;
 
+#define qn_json_obj_key_offset(ptr, cap) ((qn_string *) ptr)
 #define qn_json_obj_variant_offset(ptr, cap) ((qn_json_variant_ptr) ((char *) ptr + sizeof(qn_string) * cap))
 #define qn_json_obj_attribute_offset(ptr, cap) ((qn_json_attribute_ptr) ((char *) qn_json_obj_variant_offset(ptr, cap) + sizeof(qn_json_variant_un) * cap))
 
+// typedef qn_uint32 qn_json_hash;
 // static qn_json_hash qn_json_obj_calculate_hash(const char * restrict cstr)
 // {
 //     qn_json_hash hash = 5381;
@@ -132,7 +128,7 @@ QN_SDK void qn_json_destroy_object(qn_json_object_ptr restrict obj)
 
         for (i = 0; i < obj->cnt; i += 1) {
             qn_json_destroy_variant(attr[i].type, &var[i]);
-            qn_str_destroy((qn_string) obj->data[i]);
+            qn_str_destroy(&((qn_string)obj->data)[i]);
         } // for
         if (obj->data != &obj->keys[0]) {
             free(obj->data);
@@ -300,11 +296,18 @@ QN_SDK qn_uint qn_json_object_size(qn_json_object_ptr restrict obj)
 
 static qn_json_variant_ptr qn_json_obj_get_variant(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_type type)
 {
+    qn_json_variant_ptr vars = NULL;
+    qn_json_attribute_ptr attrs = NULL;
     int existence = 0;
     qn_uint32 pos = 0;
+
     if (obj->cnt == 0) return NULL;
+
+    vars = qn_json_obj_variant_offset(obj->data, obj->cap);
+    attrs = qn_json_obj_attribute_offset(obj->data, obj->cap);
+
     pos = qn_json_bsearch_key((qn_string *) obj->data, obj->cnt, key, &existence);
-    return (existence != 0 || obj->itm[pos].type != type) ? NULL : &obj->itm[pos].elem;
+    return (existence != 0 || attrs[pos].type != type) ? NULL : &vars[pos];
 }
 
 QN_SDK qn_json_object_ptr qn_json_get_object(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_object_ptr restrict default_val)
@@ -510,6 +513,8 @@ QN_SDK qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * rest
     qn_string * keys = NULL;
     qn_json_variant_ptr vars = NULL;
     qn_json_attribute_ptr attrs = NULL;
+    qn_json_variant_un old_var;
+    qn_json_attribute_st old_attr;
 
     assert(obj);
     assert(old_key);
@@ -594,7 +599,7 @@ typedef struct _QN_JSON_ARRAY
 
     qn_json_variant_un values[QN_JSON_ARR_DEFAULT_CAPACITY];
     qn_json_attribute_st attributes[QN_JSON_ARR_DEFAULT_CAPACITY];
-} qn_json_array_st, *qn_json_array_ptr;
+} qn_json_array_st;
 
 #define qn_json_arr_variant_offset(ptr, cap) ((qn_json_variant_ptr) ptr)
 #define qn_json_arr_attribute_offset(ptr, cap) ((qn_json_attribute_ptr) ((char *) qn_json_arr_variant_offset(ptr, cap) + sizeof(qn_json_variant_un) * cap))
@@ -620,6 +625,70 @@ QN_SDK qn_json_array_ptr qn_json_create_array(void)
     new_arr->data = &new_arr->values[0];
     new_arr->cap = sizeof(new_arr->values) / sizeof(new_arr->values[0]);
     return new_arr;
+}
+
+enum
+{
+    QN_JSON_ARR_PUSHING = 0,
+    QN_JSON_ARR_UNSHIFTING = 1
+};
+
+static qn_bool qn_json_arr_augment(qn_json_array_ptr restrict arr, int direct)
+{
+    qn_json_variant_ptr vars = NULL;
+    qn_json_attribute_ptr attrs = NULL;
+    qn_json_variant_ptr new_vars = NULL;
+    qn_json_attribute_ptr new_attrs = NULL;
+    qn_uint16 offset = 0;
+    qn_uint16 new_cap = qn_json_round_to_multiple_of_8(arr->cap + (arr->cap >> 1));
+    size_t new_size = (sizeof(qn_json_variant_un) + sizeof(qn_json_attribute_st)) * new_cap;
+    void * new_data = calloc(1,  new_size);
+    if (! new_data) {
+        qn_err_set_out_of_memory();
+        return qn_false;
+    } // if
+
+    vars = qn_json_arr_variant_offset(arr->data, arr->cap);
+    attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
+
+    new_vars = qn_json_arr_variant_offset(new_data, new_cap);
+    new_attrs = qn_json_arr_attribute_offset(new_data, new_cap);
+
+    if (direct == QN_JSON_ARR_PUSHING) {
+        memcpy(&new_vars[arr->begin], &vars[arr->begin], sizeof(qn_json_variant_un) * arr->cnt);
+        memcpy(&new_attrs[arr->begin], &attrs[arr->begin], sizeof(qn_json_attribute_st) * arr->cnt);
+    } else {
+        offset = new_cap - arr->cap;
+        memcpy(&new_vars[arr->begin + offset], &vars[arr->begin], sizeof(qn_json_variant_un) * arr->cnt);
+        memcpy(&new_attrs[arr->begin + offset], &attrs[arr->begin], sizeof(qn_json_attribute_st) * arr->cnt);
+        arr->begin += offset;
+        arr->end += offset;
+    } // if
+
+    if (arr->data != &arr->values[0]) free(arr->data);
+
+    arr->data = new_data;
+    arr->cap = new_cap;
+    return qn_true;
+}
+
+static qn_bool qn_json_push_variant(qn_json_array_ptr restrict arr, qn_json_type type, qn_json_variant_un new_var)
+{
+    qn_json_variant_ptr vars = NULL;
+    qn_json_attribute_ptr attrs = NULL;
+
+    assert(arr);
+
+    if ((arr->end == arr->cap) && ! qn_json_arr_augment(arr, QN_JSON_ARR_PUSHING)) return qn_false;
+
+    vars = qn_json_arr_variant_offset(arr->data, arr->cap);
+    attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
+
+    vars[arr->end] = new_var;
+    attrs[arr->end].type = type;
+    arr->end += 1;
+    arr->cnt += 1;
+    return qn_true;
 }
 
 /***************************************************************************//**
@@ -666,6 +735,23 @@ QN_SDK qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restric
         return NULL;
     } // if
     return new_var.array;
+}
+
+static qn_bool qn_json_unshift_variant(qn_json_array_ptr restrict arr, qn_json_type type, qn_json_variant_un new_var)
+{
+    qn_json_variant_ptr vars = NULL;
+    qn_json_attribute_ptr attrs = NULL;
+
+    if ((arr->begin == 0) && ! qn_json_arr_augment(arr, QN_JSON_ARR_UNSHIFTING)) return qn_false;
+
+    vars = qn_json_arr_variant_offset(arr->data, arr->cap);
+    attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
+
+    arr->begin -= 1;
+    vars[arr->begin] = new_var;
+    attrs[arr->begin].type = type;
+    arr->cnt += 1;
+    return qn_true;
 }
 
 /***************************************************************************//**
@@ -738,51 +824,6 @@ QN_SDK void qn_json_destroy_array(qn_json_array_ptr restrict arr)
         if (arr->data != &arr->values[0]) free(arr->data);
         free(arr);
     } // if
-}
-
-enum
-{
-    QN_JSON_ARR_PUSHING = 0,
-    QN_JSON_ARR_UNSHIFTING = 1
-};
-
-static qn_bool qn_json_arr_augment(qn_json_array_ptr restrict arr, int direct)
-{
-    qn_json_variant_ptr vars = NULL;
-    qn_json_attribute_ptr attrs = NULL;
-    qn_json_variant_ptr new_vars = NULL;
-    qn_json_attribute_ptr new_attrs = NULL;
-    qn_uint16 offset = 0;
-    qn_uint16 new_cap = qn_json_round_to_multiple_of_8(arr->cap + (arr->cap >> 1));
-    size_t new_size = (sizeof(qn_json_variant_un) + sizeof(qn_json_attribute_st)) * new_cap;
-    void * new_data = calloc(1,  new_size);
-    if (! new_data) {
-        qn_err_set_out_of_memory();
-        return qn_false;
-    } // if
-
-    vars = qn_json_arr_variant_offset(arr->data, arr->cap);
-    attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
-
-    new_vars = qn_json_arr_variant_offset(new_data, new_cap);
-    new_attrs = qn_json_arr_attribute_offset(new_data, new_cap);
-
-    if (direct == QN_JSON_ARR_PUSHING) {
-        memcpy(&new_vars[arr->begin], &vars[arr->begin], sizeof(qn_json_variant_un) * arr->cnt);
-        memcpy(&new_attrs[arr->begin], &attrs[arr->begin], sizeof(qn_json_attribute_st) * arr->cnt);
-    } else {
-        offset = new_cap - arr->cap;
-        memcpy(&new_vars[arr->begin + offset], &vars[arr->begin], sizeof(qn_json_variant_un) * arr->cnt);
-        memcpy(&new_attrs[arr->begin + offset], &attrs[arr->begin], sizeof(qn_json_attribute_st) * arr->cnt);
-        arr->begin += offset;
-        arr->end += offset;
-    } // if
-
-    if (arr->data != &arr->values[0]) free(arr->data);
-
-    arr->data = new_data;
-    arr->cap = new_cap;
-    return qn_true;
 }
 
 /***************************************************************************//**
@@ -867,25 +908,6 @@ QN_SDK qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, qn_uint n, q
 }
 
 /* ==== */
-
-static qn_bool qn_json_push_variant(qn_json_array_ptr restrict arr, qn_json_type type, qn_json_variant_un new_var)
-{
-    qn_json_variant_ptr vars = NULL;
-    qn_json_attribute_ptr attrs = NULL;
-
-    assert(arr);
-
-    if ((arr->end == arr->cap) && ! qn_json_arr_augment(arr, QN_JSON_ARR_PUSHING)) return qn_false;
-
-    vars = qn_json_arr_variant_offset(arr->data, arr->cap);
-    attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
-
-    vars[arr->end] = new_var;
-    attrs[arr->end].type = type;
-    arr->end += 1;
-    arr->cnt += 1;
-    return qn_true;
-}
 
 QN_SDK qn_bool qn_json_push_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val)
 {
@@ -1020,23 +1042,6 @@ QN_SDK void qn_json_pop(qn_json_array_ptr restrict arr)
 }
 
 /* ==== */
-
-static qn_bool qn_json_unshift_variant(qn_json_array_ptr restrict arr, qn_json_type type, qn_json_variant_un new_var)
-{
-    qn_json_variant_ptr vars = NULL;
-    qn_json_attribute_ptr attrs = NULL;
-
-    if ((arr->begin == 0) && ! qn_json_arr_augment(arr, QN_JSON_ARR_UNSHIFTING)) return qn_false;
-
-    vars = qn_json_arr_variant_offset(arr->data, arr->cap);
-    attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
-
-    arr->begin -= 1;
-    vars[arr->begin] = new_var;
-    attrs[arr->begin].type = type;
-    arr->cnt += 1;
-    return qn_true;
-}
 
 QN_SDK qn_bool qn_json_unshift_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val)
 {
@@ -1416,13 +1421,16 @@ QN_SDK int qn_json_itr_done_steps(qn_json_iterator_ptr restrict itr)
 
 QN_SDK qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr)
 {
+    qn_string * keys = NULL;
     qn_json_itr_level_ptr lvl = NULL;
 
     if (itr->cnt == 0) return NULL;
     lvl = &itr->lvl[itr->cnt - 1];
 
     if (lvl->type != QN_JSON_OBJECT) return NULL;
-    return lvl->parent.object->itm[lvl->pos - 1].key;
+
+    keys = qn_json_obj_key_offset(lvl->parent.object->data, lvl->parent.object->cap);
+    return keys[lvl->pos - 1];
 }
 
 QN_SDK void qn_json_itr_set_status(qn_json_iterator_ptr restrict itr, qn_uint32 sts)
@@ -1490,31 +1498,39 @@ QN_SDK qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr
 
 QN_SDK int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback_fn cb)
 {
-    qn_json_type type;
-    qn_json_variant_un elem;
-    qn_json_itr_level_ptr lvl;
+    qn_json_variant_ptr vars = NULL;
+    qn_json_attribute_ptr attrs = NULL;
+    qn_json_type type = QN_JSON_UNKNOWN;
+    qn_json_itr_level_ptr lvl = NULL;
+    qn_json_variant_un var;
 
     if (itr->cnt <= 0) return QN_JSON_ITR_NO_MORE;
 
     lvl = &itr->lvl[itr->cnt - 1];
     if (lvl->type == QN_JSON_OBJECT) {
         if (lvl->pos < lvl->parent.object->cnt) {
-            type = lvl->parent.object->itm[lvl->pos].type;
-            elem = lvl->parent.object->itm[lvl->pos].elem;
+            vars = qn_json_obj_variant_offset(lvl->parent.object->data, lvl->parent.object->cap);
+            attrs = qn_json_obj_attribute_offset(lvl->parent.object->data, lvl->parent.object->cap);
+
+            type = attrs[lvl->pos].type;
+            var = vars[lvl->pos];
             lvl->pos += 1;
         } else {
             return QN_JSON_ITR_NO_MORE;
         } // if
     } else {
         if (lvl->pos < lvl->parent.array->cnt) {
-            type = lvl->parent.array->itm[lvl->pos + lvl->parent.array->begin].type;
-            elem = lvl->parent.array->itm[lvl->pos + lvl->parent.array->begin].elem;
+            vars = qn_json_arr_variant_offset(lvl->parent.array->data, lvl->parent.array->cap);
+            attrs = qn_json_arr_attribute_offset(lvl->parent.array->data, lvl->parent.array->cap);
+
+            type = attrs[lvl->pos + lvl->parent.array->begin].type;
+            var = vars[lvl->pos + lvl->parent.array->begin];
             lvl->pos += 1;
         } else {
             return QN_JSON_ITR_NO_MORE;
         } // if
     } // if
-    return cb(data, type, &elem);
+    return cb(data, type, &var);
 }
 
 #ifdef __cplusplus

@@ -33,8 +33,8 @@ typedef struct _QN_JSON_FORMATTER {
 
     qn_string string;
     qn_size string_pos;
-    qn_json_class class;
-    qn_json_variant val;
+    qn_json_type type;
+    qn_json_variant_un val;
 
     qn_json_iterator_ptr iterator;
 } qn_json_formatter;
@@ -231,7 +231,7 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
     const char * str = NULL;
     qn_size free_size = fmt->buf_capacity - fmt->buf_size;
 
-    switch (fmt->class) {
+    switch (fmt->type) {
         case QN_JSON_INTEGER:
 #if defined(QN_CFG_SMALL_NUMBERS)
             ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%d", fmt->val.integer);
@@ -279,11 +279,11 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
     return qn_true;
 }
 
-static int qn_json_fmt_advance_cfn(void * data, qn_json_class cls, qn_json_variant_ptr val)
+static int qn_json_fmt_advance_cfn(void * data, qn_json_type type, qn_json_variant_ptr val)
 {
     qn_json_formatter_ptr fmt = (qn_json_formatter_ptr)data;
-    if (cls == QN_JSON_UNKNOWN) return QN_JSON_ITR_NO_MORE;
-    fmt->class = cls;
+    if (type == QN_JSON_UNKNOWN) return QN_JSON_ITR_NO_MORE;
+    fmt->type = type;
     fmt->val = *val;
     return QN_JSON_ITR_OK;
 }
@@ -331,17 +331,17 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf
                 qn_json_itr_set_status(fmt->iterator, QN_JSON_FORMATTING_VALUE);
 
             case QN_JSON_FORMATTING_VALUE:
-                if (fmt->class == QN_JSON_OBJECT) {
+                if (fmt->type == QN_JSON_OBJECT) {
                     qn_json_itr_set_status(fmt->iterator, QN_JSON_FORMATTING_NEXT);
                     if (!qn_json_fmt_putc(fmt, '{') || !qn_json_itr_push_object(fmt->iterator, fmt->val.object)) {
                         return qn_false;
                     } // if
-                } else if (fmt->class == QN_JSON_ARRAY) {
+                } else if (fmt->type == QN_JSON_ARRAY) {
                     qn_json_itr_set_status(fmt->iterator, QN_JSON_FORMATTING_NEXT);
                     if (!qn_json_fmt_putc(fmt, '[') || !qn_json_itr_push_array(fmt->iterator, fmt->val.array)) {
                         return qn_false;
                     } // if
-                } else if (fmt->class == QN_JSON_STRING) {
+                } else if (fmt->type == QN_JSON_STRING) {
                     if (!fmt->string) {
                         fmt->string = fmt->val.string;
                         fmt->string_pos = 0;

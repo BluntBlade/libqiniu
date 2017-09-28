@@ -533,8 +533,8 @@ typedef enum _QN_JSON_PRS_RESULT
 
 typedef struct _QN_JSON_PRS_LEVEL
 {
-    qn_json_class class;
-    qn_json_variant elem;
+    qn_json_type type;
+    qn_json_variant_un elem;
     qn_string key;
     qn_json_prs_status sts;
 } qn_json_prs_level, *qn_json_prs_level_ptr;
@@ -542,7 +542,7 @@ typedef struct _QN_JSON_PRS_LEVEL
 typedef struct _QN_JSON_PARSER
 {
     qn_json_scanner s;
-    qn_json_variant elem;
+    qn_json_variant_un elem;
 
     int cnt;
     int cap;
@@ -567,7 +567,7 @@ static void qn_json_prs_reset(qn_json_parser_ptr restrict prs)
 {
     while (prs->cnt > 0) {
         prs->cnt -= 1;
-        if (prs->lvl[prs->cnt].class == QN_JSON_OBJECT) {
+        if (prs->lvl[prs->cnt].type == QN_JSON_OBJECT) {
             qn_json_destroy_object(prs->lvl[prs->cnt].elem.object);
             qn_str_destroy(prs->lvl[prs->cnt].key);
         } else {
@@ -603,10 +603,10 @@ static qn_bool qn_json_prs_augment(qn_json_parser_ptr prs)
     return qn_true;
 }
 
-static qn_bool qn_json_prs_push(qn_json_parser_ptr prs, qn_json_class cls, qn_json_variant elem, qn_json_prs_status sts)
+static qn_bool qn_json_prs_push(qn_json_parser_ptr prs, qn_json_type type, qn_json_variant_un elem, qn_json_prs_status sts)
 {
     if (prs->cnt == prs->cap && !qn_json_prs_augment(prs)) return qn_false;
-    prs->lvl[prs->cnt].class = cls;
+    prs->lvl[prs->cnt].type = type;
     prs->lvl[prs->cnt].elem = elem;
     prs->lvl[prs->cnt].key = NULL;
     prs->lvl[prs->cnt].sts = sts;
@@ -633,7 +633,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
 {
     qn_integer integer = 0L;
     qn_number number = 0.0L;
-    qn_json_variant new_elem;
+    qn_json_variant_un new_elem;
     qn_json_object_ptr new_obj = NULL;
     qn_json_array_ptr new_arr = NULL;
     char * end_txt = NULL;
@@ -644,7 +644,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 qn_err_json_set_too_many_parsing_levels();
                 return qn_false;
             } // if
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (! (new_obj = qn_json_create_and_set_object(lvl->elem.object, lvl->key))) return qn_false;
                 new_elem.object = new_obj;
                 if (!qn_json_prs_push(prs, QN_JSON_OBJECT, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
@@ -662,7 +662,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 qn_err_json_set_too_many_parsing_levels();
                 return qn_false;
             } // if
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (! (new_arr = qn_json_create_and_set_array(lvl->elem.object, lvl->key))) return qn_false;
                 new_elem.array = new_arr;
                 if (!qn_json_prs_push(prs, QN_JSON_ARRAY, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
@@ -676,7 +676,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
             return qn_true;
 
         case QN_JSON_TKN_STRING:
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (!qn_json_set_text(lvl->elem.object, lvl->key, txt, txt_size)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
@@ -694,7 +694,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 qn_err_set_overflow_upper_bound();
                 return qn_false;
             } // if
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (!qn_json_set_integer(lvl->elem.object, lvl->key, integer)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
@@ -720,7 +720,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 qn_err_set_overflow_lower_bound();
                 return qn_false;
             } // if
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (!qn_json_set_number(lvl->elem.object, lvl->key, number)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
@@ -729,7 +729,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
             return qn_json_push_number(lvl->elem.array, number);
 
         case QN_JSON_TKN_TRUE:
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (!qn_json_set_boolean(lvl->elem.object, lvl->key, qn_true)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
@@ -738,7 +738,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
             return qn_json_push_boolean(lvl->elem.array, qn_true);
 
         case QN_JSON_TKN_FALSE:
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (!qn_json_set_boolean(lvl->elem.object, lvl->key, qn_false)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
@@ -747,7 +747,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
             return qn_json_push_boolean(lvl->elem.array, qn_false);
 
         case QN_JSON_TKN_NULL:
-            if (lvl->class == QN_JSON_OBJECT) {
+            if (lvl->type == QN_JSON_OBJECT) {
                 if (!qn_json_set_null(lvl->elem.object, lvl->key)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
@@ -917,7 +917,7 @@ static qn_bool qn_json_prs_parse(qn_json_parser_ptr prs)
 
     do {
         lvl = qn_json_prs_top(prs);
-        if (lvl->class == QN_JSON_OBJECT) {
+        if (lvl->type == QN_JSON_OBJECT) {
             parsing_ret = qn_json_parse_object(prs, lvl);
         } else {
             parsing_ret = qn_json_parse_array(prs, lvl);

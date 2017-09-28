@@ -26,17 +26,43 @@ extern "C"
 
 /* ==== Declaration of JSON (Abbreviation: json) ==== */
 
+
 /***************************************************************************//**
-* @defgroup JSON-Variant Implementation of JSON Variant
+* @defgroup JSON-Object Implementation of JSON Object
 *
-* The **qn_json_variant_ptr** type represents a JSON variant used to save a
-* JSON value.
+* The **qn_json_object_ptr** type represents a JSON object. Use this type to
+* collect a set of pairs of key and value. The maximum quantity of pairs is
+* 65535.
 *******************************************************************************/
+
+struct _QN_JSON_OBJECT;
+typedef struct _QN_JSON_OBJECT * qn_json_object_ptr;
+
+/***************************************************************************//**
+* @defgroup JSON-Array Implementation of JSON Array
+*
+* The **qn_json_array_ptr** type represents a JSON array. Use this type to
+* collect a list of values. The maximum quantity of values is 65535.
+* This type can be used as a **bidirectional queue**.
+*******************************************************************************/
+
+struct _QN_JSON_ARRAY;
+typedef struct _QN_JSON_ARRAY * qn_json_array_ptr;
 
 typedef qn_bool qn_json_boolean;
 typedef qn_string qn_json_string;
 typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
+
+typedef union _QN_JSON_VARIANT
+{
+    qn_json_object_ptr object;
+    qn_json_array_ptr array;
+    qn_json_string string;
+    qn_json_integer integer;
+    qn_json_number number;
+    qn_json_boolean boolean;
+} qn_json_variant_un, *qn_json_variant_ptr;
 
 typedef enum _QN_JSON_TYPE {
     QN_JSON_UNKNOWN = 0,
@@ -51,17 +77,6 @@ typedef enum _QN_JSON_TYPE {
 
 /* ==== Declaration of JSON Object ==== */
 
-/***************************************************************************//**
-* @defgroup JSON-Object Implementation of JSON Object
-*
-* The **qn_json_object_ptr** type represents a JSON object. Use this type to
-* collect a set of pairs of key and value. The maximum quantity of pairs is
-* 65535.
-*******************************************************************************/
-
-struct _QN_JSON_OBJECT;
-typedef struct _QN_JSON_OBJECT * qn_json_object_ptr;
-
 /* == Constructor & Destructor methods == */
 
 QN_SDK extern qn_json_object_ptr qn_json_create_object(void);
@@ -72,6 +87,8 @@ QN_SDK extern void qn_json_destroy_object(qn_json_object_ptr restrict obj);
 /* == Property methods == */
 
 QN_SDK extern qn_uint qn_json_object_size(qn_json_object_ptr restrict obj);
+
+/* == Check methods == */
 
 static inline qn_bool qn_json_is_empty_object(qn_json_object_ptr restrict obj)
 {
@@ -107,17 +124,6 @@ QN_SDK extern void qn_json_unset(qn_json_object_ptr restrict obj, const char * r
 QN_SDK extern qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * restrict old_key, const char * new_key);
 
 /* ==== Declaration of JSON Array ==== */
-
-/***************************************************************************//**
-* @defgroup JSON-Array Implementation of JSON Array
-*
-* The **qn_json_array_ptr** type represents a JSON array. Use this type to
-* collect a list of values. The maximum quantity of values is 65535.
-* This type can be used as a **bidirectional queue**.
-*******************************************************************************/
-
-struct _QN_JSON_ARRAY;
-typedef struct _QN_JSON_ARRAY * qn_json_array_ptr;
 
 /* == Constructor & Destructor methods == */
 
@@ -182,10 +188,10 @@ QN_SDK extern qn_bool qn_json_replace_array(qn_json_array_ptr restrict arr, qn_u
 QN_SDK extern qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, qn_uint n, qn_string restrict val);
 QN_SDK extern qn_bool qn_json_replace_cstr(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict val);
 QN_SDK extern qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict val, qn_size size);
-QN_SDK extern qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val);
-QN_SDK extern qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val);
-QN_SDK extern qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val);
-QN_SDK extern qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n);
+QN_SDK extern qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, qn_uint n, qn_json_integer val);
+QN_SDK extern qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, qn_uint n, qn_json_number val);
+QN_SDK extern qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, qn_uint n, qn_bool val);
+QN_SDK extern qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, qn_uint n);
 
 /***************************************************************************//**
 * @defgroup JSON-Iterator Implementation of JSON Object and Array Iterator

@@ -2316,7 +2316,7 @@ static ssize_t qn_stor_ru_ctx_rdr_read_vfn(qn_io_reader_itf restrict itf, char *
 
     blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
 
-    while (rem_size > 0 && ru->ctx_idx < qn_json_size_array(blk_arr)) {
+    while (rem_size > 0 && ru->ctx_idx < qn_json_array_size(blk_arr)) {
         if (ru->need_comma) {
             *pos++ = ',';
             rem_size -= 1;
@@ -2360,7 +2360,7 @@ static qn_fsize qn_stor_ru_ctx_rdr_size_vfn(qn_io_reader_itf restrict itf)
     blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
 
     size = 0;
-    for (i = 0; i < qn_json_size_array(blk_arr); i += 1) {
+    for (i = 0; i < qn_json_array_size(blk_arr); i += 1) {
         blk_info = qn_json_pick_object(blk_arr, i, NULL);
         ctx = qn_json_get_string(blk_info, "ctx", NULL);
         if (! ctx) {
@@ -2370,7 +2370,7 @@ static qn_fsize qn_stor_ru_ctx_rdr_size_vfn(qn_io_reader_itf restrict itf)
         size += qn_str_size(ctx);
     } // if
 
-    size += qn_json_size_array(blk_arr) - 1;
+    size += qn_json_array_size(blk_arr) - 1;
     return size;
 }
 
@@ -2545,12 +2545,12 @@ QN_SDK qn_json_object_ptr qn_stor_ru_get_block_info(qn_stor_resumable_upload_ptr
     assert(0 <= blk_idx);
 
     blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
-    if (blk_idx > qn_json_size_array(blk_arr)) {
+    if (blk_idx > qn_json_array_size(blk_arr)) {
         qn_err_set_out_of_range();
         return NULL;
     } // if
     if (blk_idx == QN_STOR_RU_BLOCK_LAST_INDEX) {
-        blk_idx = qn_json_size_array(blk_arr) - 1;
+        blk_idx = qn_json_array_size(blk_arr) - 1;
     } // if
     return qn_json_pick_object(blk_arr, blk_idx, NULL);
 }
@@ -2634,8 +2634,8 @@ QN_SDK qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_
         return NULL;
     } // if
     
-    if (qn_json_size_array(blk_arr) <= blk_idx) {
-        for (i = qn_json_size_array(blk_arr); i < blk_idx; i += 1) {
+    if (qn_json_array_size(blk_arr) <= blk_idx) {
+        for (i = qn_json_array_size(blk_arr); i < blk_idx; i += 1) {
             if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
             if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
         } // for

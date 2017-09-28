@@ -648,7 +648,7 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
             return list_ret;
         } // if
 
-        for (i = 0; i < qn_json_size_array(items); i += 1) {
+        for (i = 0; i < qn_json_array_size(items); i += 1) {
             item = qn_json_pick_object(items, i, NULL);
             if (! itr_cb(itr_data, item)) {
                 qn_stor_lse_destroy(lse);
@@ -666,7 +666,7 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
         } else {
             marker = NULL;
         } // if
-    } while (qn_json_size_array(items) == real_ext.limit && marker);
+    } while (qn_json_array_size(items) == real_ext.limit && marker);
 
     return list_ret;
 }

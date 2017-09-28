@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 typedef unsigned int qn_uint;
+typedef uint16_t qn_uint16;
 typedef uint32_t qn_uint32;
 typedef uint64_t qn_uint64;
 typedef ssize_t qn_ssize;
