@@ -244,7 +244,9 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
 #if defined(QN_CFG_SMALL_NUMBERS)
             ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%f", (double)fmt->val.number);
 #else
-            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%Lf", fmt->val.number);
+            /* NOTE: %Lf is a synonym for %llf in C99. */
+            /* ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%Lf", fmt->val.number); */
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%f", fmt->val.number);
 #endif
             break;
 
