@@ -119,20 +119,20 @@ QN_SDK qn_json_object_ptr qn_json_create_object(void)
 QN_SDK void qn_json_destroy_object(qn_json_object_ptr restrict obj)
 {
     qn_uint16 i = 0;
-    qn_json_variant_ptr var = NULL;
-    qn_json_attribute_ptr attr = NULL;
+    qn_string * keys = NULL;
+    qn_json_variant_ptr vars = NULL;
+    qn_json_attribute_ptr attrs = NULL;
     
     if (obj) {
-        var = qn_json_obj_variant_offset(obj->data, obj->cap);
-        attr = qn_json_obj_attribute_offset(obj->data, obj->cap);
+        keys = qn_json_obj_key_offset(obj->data, obj->cap);
+        vars = qn_json_obj_variant_offset(obj->data, obj->cap);
+        attrs = qn_json_obj_attribute_offset(obj->data, obj->cap);
 
         for (i = 0; i < obj->cnt; i += 1) {
-            qn_json_destroy_variant(attr[i].type, &var[i]);
-            qn_str_destroy(&((qn_string)obj->data)[i]);
+            qn_json_destroy_variant(attrs[i].type, &vars[i]);
+            qn_str_destroy(keys[i]);
         } // for
-        if (obj->data != &obj->keys[0]) {
-            free(obj->data);
-        } // if
+        if (obj->data != &obj->keys[0]) free(obj->data);
         free(obj);
     } // if
 }
@@ -196,7 +196,7 @@ static qn_bool qn_json_obj_set_variant(qn_json_object_ptr restrict obj, const ch
     assert(obj);
     assert(key);
 
-    keys = (qn_string *) obj->data;
+    keys = qn_json_obj_key_offset(obj->data, obj->cap);
     vars = qn_json_obj_variant_offset(obj->data, obj->cap);
     attrs = qn_json_obj_attribute_offset(obj->data, obj->cap);
 
@@ -490,7 +490,7 @@ QN_SDK void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict
 
     if (obj->cnt == 0) return;
 
-    keys = (qn_string *) obj->data;
+    keys = qn_json_obj_key_offset(obj->data, obj->cap);
 
     pos = qn_json_bsearch_key(keys, obj->cnt, key, &existence);
     if (existence != 0) return; // There is no element corresponds to the key.
@@ -527,7 +527,7 @@ QN_SDK qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * rest
 
     if (strcmp(old_key, new_key) == 0) return qn_true; /* The old key is exactly the same to the new key. */
 
-    keys = (qn_string *) obj->data;
+    keys = qn_json_obj_key_offset(obj->data, obj->cap);
     vars = qn_json_obj_variant_offset(obj->data, obj->cap);
     attrs = qn_json_obj_attribute_offset(obj->data, obj->cap);
 
