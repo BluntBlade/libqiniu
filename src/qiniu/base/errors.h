@@ -29,6 +29,7 @@ typedef enum _QN_ERR_CODE
     QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT = 2004,
     QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY = 2005,
     QN_ERR_JSON_OUT_OF_INDEX = 2006,
+    QN_ERR_JSON_NOT_THIS_TYPE = 2007,
 
     QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
     QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED = 3002,
@@ -97,6 +98,7 @@ QN_SDK extern qn_err_code_em qn_err_get_code(void);
 #define qn_err_json_set_modifying_immutable_object() qn_err_set_code(QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT, 0, __FILE__, __LINE__)
 #define qn_err_json_set_modifying_immutable_array() qn_err_set_code(QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY, 0, __FILE__, __LINE__)
 #define qn_err_json_set_out_of_index() qn_err_set_code(QN_ERR_JSON_OUT_OF_INDEX, 0, __FILE__, __LINE__)
+#define qn_err_json_set_not_this_type() qn_err_set_code(QN_ERR_JSON_NOT_THIS_TYPE, 0, __FILE__, __LINE__)
 
 #define qn_err_http_set_invalid_header_syntax() qn_err_set_code(QN_ERR_HTTP_INVALID_HEADER_SYNTAX, 0, __FILE__, __LINE__)
 #define qn_err_http_set_adding_string_field_failed() qn_err_set_code(QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, 0, __FILE__, __LINE__)
@@ -225,6 +227,8 @@ static inline qn_bool qn_err_json_is_out_of_index(void)
 {
     return qn_err_get_code() == QN_ERR_JSON_OUT_OF_INDEX;
 }
+
+#define qn_err_json_is_not_this_type() (qn_err_get_code() == QN_ERR_JSON_NOT_THIS_TYPE)
 
 
 static inline qn_bool qn_err_http_is_invalid_header_syntax(void)

@@ -579,41 +579,55 @@ static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_re
     qn_bool ret;
     qn_rgn_host_ptr up;
     qn_rgn_host_ptr io;
-    qn_json_object_ptr scheme_table;
+    qn_json_object_ptr scheme_table = NULL;
     qn_json_array_ptr entry_list;
+    qn_json_integer ttl = 86400;
+    qn_string str = NULL;
     int i;
 
-    rgn->time_to_live = qn_json_get_integer(root, "ttl", 86400);
+    qn_json_obj_get_integer(root, "ttl", &ttl);
+    rgn->time_to_live = ttl;
 
     up = qn_rgn_get_up_host(rgn);
     io = qn_rgn_get_io_host(rgn);
 
-    scheme_table = qn_json_get_object(root, "http", NULL);
-    if (scheme_table) {
-        entry_list = qn_json_get_array(scheme_table, "io", NULL);
+    if (qn_json_obj_get_object(root, "http", &scheme_table)) {
+        entry_list = NULL;
+        if (! qn_json_obj_get_array(scheme_table, "io", &entry_list)) return qn_false;
         for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
-            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), io);
+            str = NULL;
+            if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
+            ret = qn_rgn_svc_parse_and_add_entry(str, io);
             if (!ret) return qn_false;
         } // for
 
-        entry_list = qn_json_get_array(scheme_table, "up", NULL);
+        entry_list = NULL;
+        if (! qn_json_obj_get_array(scheme_table, "up", &entry_list)) return qn_false;
         for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
-            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), up);
+            str = NULL;
+            if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
+            ret = qn_rgn_svc_parse_and_add_entry(str, up);
             if (!ret) return qn_false;
         } // for
     } // if
 
-    scheme_table = qn_json_get_object(root, "https", NULL);
-    if (scheme_table) {
-        entry_list = qn_json_get_array(scheme_table, "io", NULL);
+    scheme_table = NULL;
+    if (qn_json_obj_get_object(root, "https", &scheme_table)) {
+        entry_list = NULL;
+        if (! qn_json_obj_get_array(scheme_table, "io", &entry_list)) return qn_false;
         for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
-            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), io);
+            str = NULL;
+            if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
+            ret = qn_rgn_svc_parse_and_add_entry(str, io);
             if (!ret) return qn_false;
         } // for
 
-        entry_list = qn_json_get_array(scheme_table, "up", NULL);
+        entry_list = NULL;
+        if (! qn_json_obj_get_array(scheme_table, "up", &entry_list)) return qn_false;
         for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
-            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), up);
+            str = NULL;
+            if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
+            ret = qn_rgn_svc_parse_and_add_entry(str, up);
             if (!ret) return qn_false;
         } // for
     } // if

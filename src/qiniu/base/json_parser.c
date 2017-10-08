@@ -677,7 +677,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
 
         case QN_JSON_TKN_STRING:
             if (lvl->type == QN_JSON_OBJECT) {
-                if (!qn_json_set_text(lvl->elem.object, lvl->key, txt, txt_size)) return qn_false;
+                if (! qn_json_obj_set_text(lvl->elem.object, lvl->key, txt, txt_size)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
@@ -695,12 +695,12 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 return qn_false;
             } // if
             if (lvl->type == QN_JSON_OBJECT) {
-                if (!qn_json_set_integer(lvl->elem.object, lvl->key, integer)) return qn_false;
+                if (!qn_json_obj_set_integer(lvl->elem.object, lvl->key, integer)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_integer(lvl->elem.array, integer);
+            return qn_json_arr_push_integer(lvl->elem.array, integer);
 
         case QN_JSON_TKN_NUMBER:
 #if defined(QN_CFG_SMALL_NUMBERS)
@@ -721,39 +721,39 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 return qn_false;
             } // if
             if (lvl->type == QN_JSON_OBJECT) {
-                if (!qn_json_set_number(lvl->elem.object, lvl->key, number)) return qn_false;
+                if (!qn_json_obj_set_number(lvl->elem.object, lvl->key, number)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_number(lvl->elem.array, number);
+            return qn_json_arr_push_number(lvl->elem.array, number);
 
         case QN_JSON_TKN_TRUE:
             if (lvl->type == QN_JSON_OBJECT) {
-                if (!qn_json_set_boolean(lvl->elem.object, lvl->key, qn_true)) return qn_false;
+                if (!qn_json_obj_set_boolean(lvl->elem.object, lvl->key, qn_true)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_boolean(lvl->elem.array, qn_true);
+            return qn_json_arr_push_boolean(lvl->elem.array, qn_true);
 
         case QN_JSON_TKN_FALSE:
             if (lvl->type == QN_JSON_OBJECT) {
-                if (!qn_json_set_boolean(lvl->elem.object, lvl->key, qn_false)) return qn_false;
+                if (!qn_json_obj_set_boolean(lvl->elem.object, lvl->key, qn_false)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_boolean(lvl->elem.array, qn_false);
+            return qn_json_arr_push_boolean(lvl->elem.array, qn_false);
 
         case QN_JSON_TKN_NULL:
             if (lvl->type == QN_JSON_OBJECT) {
-                if (!qn_json_set_null(lvl->elem.object, lvl->key)) return qn_false;
+                if (! qn_json_obj_set_null(lvl->elem.object, lvl->key)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_boolean(lvl->elem.array, qn_false);
+            return qn_json_arr_push_boolean(lvl->elem.array, qn_false);
 
         case QN_JSON_TKNERR_NEED_MORE_TEXT:
             qn_err_json_set_need_more_text_input();

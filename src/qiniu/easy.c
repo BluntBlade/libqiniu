@@ -290,6 +290,7 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
 static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_easy_put_extra_ptr restrict ext)
 {
     int start_idx = 0;
+    qn_json_integer code = 0;
     qn_string resumable_info = NULL;
     qn_stor_upload_extra_ptr upe = NULL;
     qn_json_object_ptr put_ret;
@@ -317,10 +318,16 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
     qn_str_destroy(ext->put_ctrl.resumable_info);
 
     if (ext) {
-        if (put_ret && qn_json_get_integer(put_ret, "fn-code", -1) == 200) {
-            ext->put_ctrl.resumable_info = NULL;
-        } else {
+        if (! put_ret) {
             ext->put_ctrl.resumable_info = qn_stor_ru_to_string(ru);
+        } else {
+            code = -1;
+            qn_json_obj_get_integer(put_ret, "fn-code", &code);
+            if (code == 200) {
+                ext->put_ctrl.resumable_info = NULL;
+            } else {
+                ext->put_ctrl.resumable_info = qn_stor_ru_to_string(ru);
+            } // if
         } // if
     } // if
 
@@ -456,6 +463,7 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
 QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     int i;
+    qn_json_integer code = 0;
     qn_string tmp_str;
     qn_io_reader_itf io_rdr;
     qn_json_object_ptr put_ret;
@@ -513,19 +521,21 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
     qn_io_rdr_close(io_rdr);
     qn_json_destroy_object(pp);
 
-    if (put_ret && (qn_json_get_integer(put_ret, "fn-code", 0) == 200)) {
+    if (! put_ret) return put_ret;
+    
+    qn_json_obj_get_integer(put_ret, "fn-code", &code);
+    if (code == 200) {
         if (real_ext.put_ctrl.check_qetag) {
             if (ext->attr.local_qetag) qn_str_destroy(ext->attr.local_qetag);
             ext->attr.local_qetag = qn_etag_ctx_final(real_ext.temp.qetag);
             tmp_str = qn_json_get_string(put_ret, "hash", NULL);
 
             if (ext->attr.local_qetag && tmp_str && qn_str_compare(ext->attr.local_qetag, tmp_str) != 0) {
-                qn_json_set_integer(put_ret, "fn-code", 9999);
-                qn_json_set_string(put_ret, "fn-error", "[EASY] Failed in QETAG hash checking");
+                qn_json_obj_set_integer(put_ret, "fn-code", 9999);
+                qn_json_obj_set_string(put_ret, "fn-error", "[EASY] Failed in QETAG hash checking");
             } // if
         } // if
     } // if
-
     return put_ret;
 }
 
@@ -602,6 +612,7 @@ QN_SDK void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned in
 
 QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_itr_callback_fn itr_cb, qn_easy_list_extra_ptr restrict ext)
 {
+    qn_json_integer code = 0;
     qn_string marker = NULL;
     qn_json_object_ptr list_ret;
     qn_json_object_ptr item;
@@ -637,19 +648,24 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
             qn_stor_lse_destroy(lse);
             return NULL;
         } // if
-        if (qn_json_get_integer(list_ret, "fn-code", 0) != 200) {
+
+        code = 0;
+        qn_json_obj_get_integer(list_ret, "fn-code", &code);
+        if (code != 200) {
             qn_stor_lse_destroy(lse);
             return list_ret;
         } // if
 
-        items = qn_json_get_array(list_ret, "items", NULL);
+        items = NULL;
+        if (! qn_json_obj_get_array(list_ret, "items", &items)) return NULL;
         if (! items) {
             qn_stor_lse_destroy(lse);
             return list_ret;
         } // if
 
         for (i = 0; i < qn_json_array_size(items); i += 1) {
-            item = qn_json_pick_object(items, i, NULL);
+            item = NULL;
+            if (! qn_json_arr_get_object(items, i, &item)) return NULL;
             if (! itr_cb(itr_data, item)) {
                 qn_stor_lse_destroy(lse);
                 return NULL;

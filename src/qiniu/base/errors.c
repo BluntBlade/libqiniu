@@ -35,6 +35,7 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT, "Modifying an immutable JSON object"},
     {QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY, "Modifying an immutable JSON array"},
     {QN_ERR_JSON_OUT_OF_INDEX, "Out fo index to the array"},
+    {QN_ERR_JSON_NOT_THIS_TYPE, "The entry which is being manipulated doesn't have this type"},
 
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
     {QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, "Adding string field to HTTP form failed"},
