@@ -2325,7 +2325,8 @@ static ssize_t qn_stor_ru_ctx_rdr_read_vfn(qn_io_reader_itf restrict itf, char *
 
         if (! qn_json_arr_get_object(blk_arr, ru->ctx_idx, &blk_info)) return -1;
 
-        ctx = qn_json_get_string(blk_info, "ctx", NULL);
+        ctx = NULL;
+        if (! qn_json_obj_get_string(blk_info, "ctx", &ctx)) return -1;
         if (! ctx) {
             qn_err_stor_set_lack_of_block_context();
             return -1;
@@ -2365,7 +2366,8 @@ static qn_fsize qn_stor_ru_ctx_rdr_size_vfn(qn_io_reader_itf restrict itf)
     size = 0;
     for (i = 0; i < qn_json_array_size(blk_arr); i += 1) {
         if (! qn_json_arr_get_object(blk_arr, i, &blk_info)) return 0;
-        ctx = qn_json_get_string(blk_info, "ctx", NULL);
+        ctx = NULL;
+        if (! qn_json_obj_get_string(blk_info, "ctx", &ctx)) return 0;
         if (! ctx) {
             qn_err_stor_set_lack_of_block_context();
             return 0;
@@ -2484,7 +2486,13 @@ QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict
         return NULL;
     } // if
 
-    fsize_str = qn_json_get_string(ru->progress, "fsize", NULL);
+    fsize_str = NULL;
+    if (! qn_json_obj_get_string(ru->progress, "fsize", &fsize_str)) {
+        qn_json_destroy_object(ru->progress);
+        free(ru);
+        return NULL;
+    }
+
     if (! fsize_str) {
         qn_json_destroy_object(ru->progress);
         free(ru);
@@ -2493,7 +2501,13 @@ QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict
     } // if
     ru->fsize = atoll(qn_str_cstr(fsize_str));
 
-    fsize_str = qn_json_get_string(ru->progress, "uploaded_fsize", NULL);
+    fsize_str = NULL;
+    if (! qn_json_obj_get_string(ru->progress, "uploaded_fsize", &fsize_str)) {
+        qn_json_destroy_object(ru->progress);
+        free(ru);
+        return NULL;
+    }
+
     if (! fsize_str) {
         qn_json_destroy_object(ru->progress);
         free(ru);
@@ -2594,15 +2608,20 @@ QN_SDK qn_json_object_ptr qn_stor_ru_update_block_info(qn_stor_resumable_upload_
     if (! qn_json_obj_get_integer(blk_info, "bsize", -1)) return NULL;
     
     // ---- Get and set the returned block information back into the blk_info object.
-    ctx = qn_json_get_string(up_ret, "ctx", NULL);
-    checksum = qn_json_get_string(up_ret, "checksum", NULL);
-    host = qn_json_get_string(up_ret, "host", NULL);
+    ctx = NULL;
+    if (! qn_json_obj_get_string(up_ret, "ctx", &ctx)) return NULL;
+
+    checksum = NULL;
+    if (! qn_json_obj_get_string(up_ret, "checksum", &checksum)) return NULL:
+
+    host = NULL;
+    if (! qn_json_obj_get_string(up_ret, "host", &host)) return NULL;
 
     crc32 = -1;
-    qn_json_obj_get_integer(up_ret, "crc32", &crc32);
+    if (! qn_json_obj_get_integer(up_ret, "crc32", &crc32)) return NULL;
 
     new_offset = -1;
-    qn_json_obj_get_integer(up_ret, "offset", &new_offset);
+    if (! qn_json_obj_get_integer(up_ret, "offset", &new_offset)) return NULL;
 
     if (! ctx || ! checksum || ! host || crc32 < 0 || new_offset < 0) {
         qn_err_stor_set_invalid_upload_result();
@@ -2828,26 +2847,28 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, cons
     assert(data_rdr);
 
     blk_size = -1;
-    if (! qn_json_obj_get_integer(blk_info, "bsize", -1)) return NULL;
+    if (! qn_json_obj_get_integer(blk_info, "bsize", &blk_size)) return NULL;
     if (blk_size <= 0) {
         qn_err_stor_set_lack_of_block_info();
         return NULL;
     } // if
 
     offset = -1;
-    if (! qn_json_obj_get_integer(blk_info, "offset", -1)) return NULL;
+    if (! qn_json_obj_get_integer(blk_info, "offset", &offset)) return NULL;
     if (offset <= 0) {
         qn_err_stor_set_lack_of_block_info();
         return NULL;
     } // if
 
-    host = qn_json_get_string(blk_info, "host", NULL);
+    host = NULL;
+    if (! qn_json_obj_get_string(blk_info, "host", &host)) return NULL;
     if (! host) {
         qn_err_stor_set_lack_of_block_info();
         return NULL;
     } // if
 
-    ctx = qn_json_get_string(blk_info, "ctx", NULL);
+    ctx = NULL;
+    if (! qn_json_obj_get_string(blk_info, "ctx", &ctx)) return NULL:
     if (! ctx) {
         qn_err_stor_set_lack_of_block_info();
         return NULL;
@@ -2898,7 +2919,8 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     assert(ctx_rdr);
     assert(last_blk_info);
 
-    host = qn_json_get_string(last_blk_info, "host", NULL);
+    host = NULL;
+    if (! qn_json_obj_get_string(last_blk_info, "host", &host)) return NULL;
     if (! host) {
         qn_err_stor_set_lack_of_block_info();
         return NULL;

@@ -78,7 +78,8 @@ int main(int argc, char * argv[])
         printf("%s\n", list_ret_str);
         qn_str_destroy(list_ret_str);
 
-        marker = qn_json_get_string(list_ret, "marker", NULL);
+        marker = NULL;
+        if (! qn_json_obj_get_string(list_ret, "marker", &marker)) break;
         qn_stor_lse_set_marker(le, marker);
     } while (marker && strlen(marker));
 

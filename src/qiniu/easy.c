@@ -400,7 +400,12 @@ static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict e
         } // if
     } // if
 
-    scope = qn_json_get_string(*pp, "scope", NULL);
+    scope = NULL;
+    if (! qn_json_obj_get_string(*pp, "scope", &scope)) {
+        qn_str_destroy(access_key);
+        return NULL;
+    }
+
     if (! scope) {
         qn_str_destroy(access_key);
         qn_err_easy_set_invalid_put_policy();
@@ -449,7 +454,8 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
         if (! qn_easy_parse_putting_policy(easy, pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken), pp)) return qn_false;
     } // if
 
-    scope = qn_json_get_string(*pp, "scope", NULL);
+    scope = NULL;
+    if (! qn_json_obj_get_string(*pp, "scope", &scope)) return qn_false;
     if (! scope) {
         qn_err_easy_set_invalid_put_policy();
         return qn_false;
@@ -528,7 +534,8 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         if (real_ext.put_ctrl.check_qetag) {
             if (ext->attr.local_qetag) qn_str_destroy(ext->attr.local_qetag);
             ext->attr.local_qetag = qn_etag_ctx_final(real_ext.temp.qetag);
-            tmp_str = qn_json_get_string(put_ret, "hash", NULL);
+            tmp_str = NULL;
+            if (! qn_json_obj_get_string(put_ret, "hash", &tmp_str)) return NULL;
 
             if (ext->attr.local_qetag && tmp_str && qn_str_compare(ext->attr.local_qetag, tmp_str) != 0) {
                 qn_json_obj_set_integer(put_ret, "fn-code", 9999);
@@ -643,7 +650,9 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
         if (marker) qn_stor_lse_set_marker(lse, qn_str_cstr(marker));
 
         list_ret = qn_stor_ls_api_list(easy->stor, mac, bucket, lse);
+#if defined(QN_CFG_SUPPORT_MULTITHREAD)
         qn_str_destroy(marker);
+#endif
         if (! list_ret) {
             qn_stor_lse_destroy(lse);
             return NULL;
@@ -672,16 +681,11 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
             } // if
         } // for
 
-        if (qn_json_get_string(list_ret, "marker", NULL)) {
-            marker = qn_cs_duplicate(qn_json_get_string(list_ret, "marker", NULL));
-            if (! marker) {
-                qn_err_set_out_of_memory();
-                qn_stor_lse_destroy(lse);
-                return NULL;
-            } // if
-        } else {
-            marker = NULL;
-        } // if
+        marker = NULL;
+        if (! qn_json_obj_get_string(list_ret, "marker", &marker)) {
+            qn_stor_lse_destroy(lse);
+            return NULL;
+        }
     } while (qn_json_array_size(items) == real_ext.limit && marker);
 
     return list_ret;
