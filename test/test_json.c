@@ -507,6 +507,9 @@ void test_obj_set()
 void test_manipulate_array(void)
 {
     qn_bool ret = qn_false;
+    qn_bool bool_val;
+    qn_integer int_val;
+    qn_number num_val;
     qn_json_array_ptr arr_root = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
@@ -554,17 +557,27 @@ void test_manipulate_array(void)
     CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 3);
 
     // check the last element (boolean == false)
-    CU_ASSERT_TRUE(qn_json_pick_boolean(arr_root, 2, qn_true) == qn_false);
+    bool_val = qn_true;
+    CU_ASSERT_TRUE(qn_json_arr_get_boolean(arr_root, 2, &bool_val));
+    CU_ASSERT_FALSE(bool_val);
     qn_json_pop(arr_root);
     CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     // check the last element (int == 256)
-    CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) != 0);
-    CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) == 256);
+    int_val = 0;
+    CU_ASSERT_TRUE(qn_json_arr_get_integer(arr_root, 1, &int_val));
+    CU_ASSERT_TRUE(int_val != 0);
+
+    int_val = 0;
+    CU_ASSERT_TRUE(qn_json_arr_get_integer(arr_root, 1, &int_val));
+    CU_ASSERT_TRUE(int_val == 256);
     CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     // check the first element
-    CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_pick_number(arr_root, 0, 0.0L), -9.99L, 0.01L);
+
+    num_val = 0.0L;
+    CU_ASSERT_TRUE(qn_json_arr_get_number(arr_root, 0, &num_val));
+    CU_ASSERT_LONG_DOUBLE_EQUAL(num_val, -9.99L, 0.01L);
     CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 2);
 
     qn_json_destroy_array(arr_root);
@@ -628,11 +641,13 @@ void test_arr_replace()
     ret = qn_json_replace_array(arr_root, 1, arr);
     CU_ASSERT_TRUE(ret);
 
-    arr_ret = qn_json_pick_array(arr_root, 1, NULL);
+    arr_ret = NULL;
+    CU_ASSERT_TRUE(qn_json_arr_get_array(arr_root, 1, &arr_ret));
     CU_ASSERT_PTR_NOT_NULL(arr_ret);
     CU_ASSERT_EQUAL(qn_json_array_size(arr_ret), 1);
 
-    int_ret = qn_json_pick_integer(arr_root, 1, -1);
+    int_ret = -1;
+    CU_ASSERT_TRUE(qn_json_arr_get_integer(arr_root, 1, &int_ret));
     CU_ASSERT_EQUAL(int_ret, -1);
 
     // ----
@@ -640,7 +655,8 @@ void test_arr_replace()
     ret = qn_json_replace_integer(arr_root, 0, 456);
     CU_ASSERT_TRUE(ret);
 
-    int_ret = qn_json_pick_integer(arr_root, 0, -1);
+    int_ret = -1;
+    CU_ASSERT_TRUE(qn_json_arr_get_integer(arr_root, 0, &int_ret));
     CU_ASSERT_EQUAL(int_ret, 456);
 
     obj_ret = NULL;
@@ -653,10 +669,12 @@ void test_arr_replace()
     ret = qn_json_replace_number(arr_root, 1, -666.666L);
     CU_ASSERT_TRUE(ret);
 
-    num_ret = qn_json_pick_number(arr_root, 1, -1.0L);
+    num_ret = -1.0L;
+    CU_ASSERT_TRUE(qn_json_arr_get_number(arr_root, 1, &num_ret));
     CU_ASSERT_LONG_DOUBLE_EQUAL(num_ret, -666.666L, 0.001L);
 
-    arr_ret = qn_json_pick_array(arr_root, 1, NULL);
+    arr_ret = NULL;
+    CU_ASSERT_TRUE(qn_json_arr_get_array(arr_root, 1, &arr_ret));
     CU_ASSERT_PTR_NULL(arr_ret);
 
     // ----
@@ -664,10 +682,12 @@ void test_arr_replace()
     ret = qn_json_replace_boolean(arr_root, 0, qn_true);
     CU_ASSERT_TRUE(ret);
 
-    bool_ret = qn_json_pick_boolean(arr_root, 0, qn_false);
+    bool_ret = qn_false;
+    CU_ASSERT_TRUE(qn_json_arr_get_boolean(arr_root, 0, &bool_ret);
     CU_ASSERT_TRUE(bool_ret);
 
-    int_ret = qn_json_pick_integer(arr_root, 0, -1);
+    int_ret = -1;
+    CU_ASSERT_TRUE(qn_json_arr_get_integer(arr_root, 0, &int_ret));
     CU_ASSERT_EQUAL(int_ret, -1);
 
     // ----
@@ -675,7 +695,8 @@ void test_arr_replace()
     ret = qn_json_replace_null(arr_root, 1);
     CU_ASSERT_TRUE(ret);
 
-    num_ret = qn_json_pick_number(arr_root, 1, -1.0L);
+    num_ret = -1.0L;
+    CU_ASSERT_TRUE(qn_json_arr_get_number(arr_root, 1, &num_ret));
     CU_ASSERT_LONG_DOUBLE_EQUAL(num_ret, -1L, 0.01L);
 
     // ----
@@ -1476,6 +1497,7 @@ void test_parse_array_holding_one_element(void)
 void test_parse_array_holding_two_elements(void)
 {
     qn_bool ret;
+    qn_integer int_val;
     const char buf[] = {"[\"This is a trivial element.\",-123]"};
     qn_size buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
@@ -1492,7 +1514,9 @@ void test_parse_array_holding_two_elements(void)
     } // if
 
     CU_ASSERT_TRUE(!qn_json_is_empty_array(arr_root));
-    CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) == -123);
+    int_val = 0;
+    CU_ASSERT_TRUE(qn_json_arr_get_integer(arr_root, 1, &int_val));
+    CU_ASSERT_TRUE(int_val == -123);
 
     qn_json_destroy_array(arr_root);
 }
@@ -1500,6 +1524,8 @@ void test_parse_array_holding_two_elements(void)
 void test_parse_array_holding_ordinary_elements(void)
 {
     qn_bool ret;
+    qn_bool bool_val;
+    qn_number num_val;
     const char buf[] = {"[+123.456,true,false,null]"};
     qn_size buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
@@ -1517,9 +1543,17 @@ void test_parse_array_holding_ordinary_elements(void)
 
     CU_ASSERT_TRUE(!qn_json_is_empty_array(arr_root));
 
-    CU_ASSERT_TRUE(qn_json_pick_boolean(arr_root, 2, qn_true) == qn_false);
-    CU_ASSERT_TRUE(qn_json_pick_boolean(arr_root, 1, qn_false) == qn_true);
-    CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_pick_number(arr_root, 0, 0.0L), 123.456L, 0.001L);
+    bool_val = qn_true;
+    CU_ASSERT_TRUE(qn_json_arr_get_boolean(arr_root, 2, &bool_val));
+    CU_ASSERT_TRUE(bool_val == qn_false);
+
+    bool_val = qn_false;
+    CU_ASSERT_TRUE(qn_json_arr_get_boolean(arr_root, 1, &bool_val));
+    CU_ASSERT_TRUE(bool_val == qn_true);
+
+    num_val = 0.0L;
+    CU_ASSERT_TRUE(qn_json_arr_get_number(arr_root, 0, &num_val));
+    CU_ASSERT_LONG_DOUBLE_EQUAL(num_val, 123.456L, 0.001L);
 
     qn_json_destroy_array(arr_root);
 }
@@ -1550,9 +1584,9 @@ void test_parse_array_holding_empty_complex_elements(void)
     CU_ASSERT_PTR_NOT_NULL(obj_elem);
     CU_ASSERT_TRUE(qn_json_is_empty_object(obj_elem));
 
-    arr_elem = qn_json_pick_array(arr_root, 1, NULL);
-
-    CU_ASSERT_TRUE(arr_elem != NULL);
+    arr_elem = NULL;
+    CU_ASSERT_TRUE(qn_json_arr_get_array(arr_root, 1, &arr_elem));
+    CU_ASSERT_PTR_NOT_NULL(arr_elem);
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_elem));
 
     qn_json_destroy_array(arr_root);
@@ -1561,6 +1595,8 @@ void test_parse_array_holding_empty_complex_elements(void)
 void test_parse_array_holding_embedded_arrays(void)
 {
     qn_bool ret;
+    qn_bool bool_val;
+    qn_number num_val;
     const char buf[] = {"[[+123.456,true,false,null],[]]"};
     qn_size buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
@@ -1579,18 +1615,26 @@ void test_parse_array_holding_embedded_arrays(void)
 
     CU_ASSERT_TRUE(!qn_json_is_empty_array(arr_root));
 
-    arr_elem = qn_json_pick_array(arr_root, 0, NULL);
-
-    CU_ASSERT_TRUE(arr_elem != NULL);
+    arr_elem = NULL;
+    CU_ASSERT_TRUE(qn_json_arr_get_array(arr_root, 0, &arr_elem));
+    CU_ASSERT_PTR_NOT_NULL(arr_elem);
     CU_ASSERT_TRUE(!qn_json_is_empty_array(arr_elem));
 
-    CU_ASSERT_TRUE(qn_json_pick_boolean(arr_elem, 2, qn_true) == qn_false);
-    CU_ASSERT_TRUE(qn_json_pick_boolean(arr_elem, 1, qn_false) == qn_true);
-    CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_pick_number(arr_elem, 0, 0.0L), 123.456L, 0.001L);
+    bool_val = qn_true;
+    CU_ASSERT_TRUE(qn_json_arr_get_boolean(arr_elem, 2, &bool_val));
+    CU_ASSERT_FALSE(bool_val);
 
-    arr_elem = qn_json_pick_array(arr_root, 1, NULL);
+    bool_val = qn_false;
+    CU_ASSERT_TRUE(qn_json_arr_get_boolean(arr_elem, 1, &bool_val));
+    CU_ASSERT_TRUE(bool_val);
 
-    CU_ASSERT_TRUE(arr_elem != NULL);
+    num_val = 0.0L;
+    CU_ASSERT_TRUE(qn_json_arr_get_number(arr_root, 0, &num_val));
+    CU_ASSERT_LONG_DOUBLE_EQUAL(num_val, 123.456L, 0.001L);
+
+    arr_elem = NULL;
+    CU_ASSERT_TRUE(qn_json_arr_get_array(arr_root, 1, &arr_elem));
+    CU_ASSERT_PTR_NOT_NULL(arr_elem);
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_elem));
 
     qn_json_destroy_array(arr_root);
