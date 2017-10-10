@@ -589,7 +589,7 @@ void test_arr_replace()
     CU_ASSERT_PTR_NOT_NULL(arr_root);
 
     // push a string element
-    ret = qn_json_push_text(arr_root, buf, buf_len);
+    ret = qn_json_arr_push_text(arr_root, buf, buf_len);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL(qn_json_array_size(arr_root), 1);
 

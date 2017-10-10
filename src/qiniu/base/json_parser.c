@@ -682,7 +682,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_text(lvl->elem.array, txt, txt_size);
+            return qn_json_arr_push_text(lvl->elem.array, txt, txt_size);
 
         case QN_JSON_TKN_INTEGER:
             integer = strtoll(txt, &end_txt, 10);

@@ -1007,36 +1007,6 @@ QN_SDK qn_bool qn_json_arr_unshift_string(qn_json_array_ptr restrict arr, qn_str
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_unshift_cstr(qn_json_array_ptr restrict arr, const char * restrict val)
-{
-    qn_json_variant_un new_var;
-
-    assert(arr);
-    assert(val);
-
-    if (! (new_var.string = qn_cs_duplicate(val))) return qn_false;
-    if (! qn_json_arr_unshift_variant(arr, QN_JSON_STRING, new_var)) {
-        qn_str_destroy(new_var.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-QN_SDK qn_bool qn_json_arr_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size)
-{
-    qn_json_variant_un new_var;
-
-    assert(arr);
-    assert(val);
-
-    if (! (new_var.string = qn_cs_clone(val, size))) return qn_false;
-    if (! qn_json_arr_unshift_variant(arr, QN_JSON_STRING, new_var)) {
-        qn_str_destroy(new_var.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
 QN_SDK qn_bool qn_json_arr_unshift_integer(qn_json_array_ptr restrict arr, qn_json_integer val)
 {
     qn_json_variant_un new_var;

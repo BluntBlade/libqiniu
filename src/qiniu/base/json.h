@@ -181,6 +181,28 @@ QN_SDK extern qn_bool qn_json_arr_push_number(qn_json_array_ptr restrict arr, qn
 QN_SDK extern qn_bool qn_json_arr_push_boolean(qn_json_array_ptr restrict arr, qn_bool val);
 QN_SDK extern qn_bool qn_json_arr_push_null(qn_json_array_ptr restrict arr);
 
+static inline qn_bool qn_json_arr_push_cstr(qn_json_array_ptr restrict arr, const char * restrict val)
+{
+    qn_string new_str = qn_cs_duplicate(val);
+    if (! new_str) return qn_false;
+    if (! qn_json_arr_push_string(arr, new_str)) {
+        qn_str_destroy(new_str);
+        return qn_true;
+    }
+    return qn_false;
+}
+
+static inline qn_bool qn_json_arr_push_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size val_size)
+{
+    qn_string new_str = qn_cs_clone(val, val_size);
+    if (! new_str) return qn_false;
+    if (! qn_json_arr_push_string(arr, new_str)) {
+        qn_str_destroy(new_str);
+        return qn_true;
+    }
+    return qn_false;
+}
+
 QN_SDK extern void qn_json_arr_pop(qn_json_array_ptr restrict arr);
 
 /* ==== */
@@ -188,12 +210,32 @@ QN_SDK extern void qn_json_arr_pop(qn_json_array_ptr restrict arr);
 QN_SDK extern qn_bool qn_json_arr_unshift_object(qn_json_array_ptr restrict arr, qn_json_object_ptr restrict val);
 QN_SDK extern qn_bool qn_json_arr_unshift_array(qn_json_array_ptr restrict arr, qn_json_array_ptr restrict val);
 QN_SDK extern qn_bool qn_json_arr_unshift_string(qn_json_array_ptr restrict arr, qn_string restrict val);
-QN_SDK extern qn_bool qn_json_arr_unshift_cstr(qn_json_array_ptr restrict arr, const char * restrict val);
-QN_SDK extern qn_bool qn_json_arr_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size);
 QN_SDK extern qn_bool qn_json_arr_unshift_integer(qn_json_array_ptr restrict arr, qn_json_integer val);
 QN_SDK extern qn_bool qn_json_arr_unshift_number(qn_json_array_ptr restrict arr, qn_json_number val);
 QN_SDK extern qn_bool qn_json_arr_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val);
 QN_SDK extern qn_bool qn_json_arr_unshift_null(qn_json_array_ptr restrict arr);
+
+static inline qn_bool qn_json_arr_unshift_cstr(qn_json_array_ptr restrict arr, const char * restrict val)
+{
+    qn_string new_str = qn_cs_duplicate(val);
+    if (! new_str) return qn_false;
+    if (! qn_json_arr_unshift_string(arr, new_str)) {
+        qn_str_destroy(new_str);
+        return qn_true;
+    }
+    return qn_false;
+}
+
+static inline qn_bool qn_json_arr_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size val_size)
+{
+    qn_string new_str = qn_cs_clone(val, val_size);
+    if (! new_str) return qn_false;
+    if (! qn_json_arr_unshift_string(arr, new_str)) {
+        qn_str_destroy(new_str);
+        return qn_true;
+    }
+    return qn_false;
+}
 
 QN_SDK extern void qn_json_arr_shift(qn_json_array_ptr restrict arr);
 
@@ -206,6 +248,28 @@ QN_SDK extern qn_bool qn_json_arr_replace_integer(qn_json_array_ptr restrict arr
 QN_SDK extern qn_bool qn_json_arr_replace_number(qn_json_array_ptr restrict arr, qn_uint n, qn_json_number val);
 QN_SDK extern qn_bool qn_json_arr_replace_boolean(qn_json_array_ptr restrict arr, qn_uint n, qn_bool val);
 QN_SDK extern qn_bool qn_json_arr_replace_null(qn_json_array_ptr restrict arr, qn_uint n);
+
+static inline qn_bool qn_json_arr_replace_cstr(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict val)
+{
+    qn_string new_str = qn_cs_duplicate(val);
+    if (! new_str) return qn_false;
+    if (! qn_json_arr_replace_string(arr, n, new_str)) {
+        qn_str_destroy(new_str);
+        return qn_true;
+    }
+    return qn_false;
+}
+
+static inline qn_bool qn_json_arr_replace_text(qn_json_array_ptr restrict arr, qn_uint n, const char * restrict val, qn_size val_size)
+{
+    qn_string new_str = qn_cs_clone(val, val_size);
+    if (! new_str) return qn_false;
+    if (! qn_json_arr_replace_string(arr, n, new_str)) {
+        qn_str_destroy(new_str);
+        return qn_true;
+    }
+    return qn_false;
+}
 
 /***************************************************************************//**
 * @defgroup JSON-Iterator Implementation of JSON Object and Array Iterator
