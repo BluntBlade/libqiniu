@@ -62,7 +62,8 @@ void test_manipulate_object(void)
     CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 3);
 
     // check the string element
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_TRUE(str != NULL);
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), buf) == 0);
     CU_ASSERT_EQUAL(qn_json_object_size(obj_root), 3);
@@ -82,6 +83,7 @@ void test_manipulate_object(void)
 void test_obj_rename_alone_field_1_new_key_greater_than_old_key(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -92,8 +94,12 @@ void test_obj_rename_alone_field_1_new_key_greater_than_old_key(void)
 
     ret = qn_json_obj_rename(obj_root, "A", "B");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "A", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "B", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "A", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "B", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -101,6 +107,7 @@ void test_obj_rename_alone_field_1_new_key_greater_than_old_key(void)
 void test_obj_rename_alone_field_2_new_key_less_than_old_key(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -111,8 +118,12 @@ void test_obj_rename_alone_field_2_new_key_less_than_old_key(void)
 
     ret = qn_json_obj_rename(obj_root, "Z", "Y");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Z", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Z", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Y", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -120,6 +131,7 @@ void test_obj_rename_alone_field_2_new_key_less_than_old_key(void)
 void test_obj_rename_alone_field_3_new_key_equals_to_old_key(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -130,7 +142,9 @@ void test_obj_rename_alone_field_3_new_key_equals_to_old_key(void)
 
     ret = qn_json_obj_rename(obj_root, "X", "X");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "X", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -138,6 +152,7 @@ void test_obj_rename_alone_field_3_new_key_equals_to_old_key(void)
 void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_1(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -154,10 +169,18 @@ void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_1(void)
 
     ret = qn_json_obj_rename(obj_root, "C", "D");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "C", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "D", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "B", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "A", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "C", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "D", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "B", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "A", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -165,6 +188,7 @@ void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_1(void)
 void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_2(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -181,10 +205,18 @@ void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_2(void)
 
     ret = qn_json_obj_rename(obj_root, "B", "D");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "B", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "D", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "C", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "A", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "B", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "D", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "C", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "A", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -192,6 +224,7 @@ void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_2(void)
 void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_3(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -208,10 +241,18 @@ void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_3(void)
 
     ret = qn_json_obj_rename(obj_root, "A", "D");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "A", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "D", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "C", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "B", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "A", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "D", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "C", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "B", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -219,6 +260,7 @@ void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_3(void)
 void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_1(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -235,10 +277,18 @@ void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_1(void)
 
     ret = qn_json_obj_rename(obj_root, "X", "W");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "X", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "W", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "X", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "W", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Y", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Z", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -246,6 +296,7 @@ void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_1(void)
 void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_2(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -262,10 +313,18 @@ void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_2(void)
 
     ret = qn_json_obj_rename(obj_root, "Y", "W");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Y", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "W", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Y", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "W", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "X", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Z", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -273,6 +332,7 @@ void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_2(void)
 void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_3(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -289,10 +349,18 @@ void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_3(void)
 
     ret = qn_json_obj_rename(obj_root, "Z", "W");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Z", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "W", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Z", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "W", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "X", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Y", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -300,6 +368,7 @@ void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_3(void)
 void test_obj_rename_accompanied_field_3_new_key_equals_to_old_key(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -316,9 +385,15 @@ void test_obj_rename_accompanied_field_3_new_key_equals_to_old_key(void)
 
     ret = qn_json_obj_rename(obj_root, "Y", "Y");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "X", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Y", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Z", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -326,6 +401,7 @@ void test_obj_rename_accompanied_field_3_new_key_equals_to_old_key(void)
 void test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place(void)
 {
     qn_bool ret;
+    qn_string str;
     qn_json_object_ptr obj_root;
 
     obj_root = qn_json_create_object();
@@ -342,10 +418,18 @@ void test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place(void)
 
     ret = qn_json_obj_rename(obj_root, "Y", "YYYY");
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Y", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "YYYY", NULL));
-    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Y", &str));
+    CU_ASSERT_PTR_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "X", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "YYYY", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "Z", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
 
     qn_json_destroy_object(obj_root);
 }
@@ -397,7 +481,8 @@ void test_obj_set()
     CU_ASSERT_PTR_NOT_NULL(obj_ret);
     CU_ASSERT_EQUAL(qn_json_object_size(obj_ret), 1);
 
-    str_ret = qn_json_get_string(obj_root, "_str", NULL);
+    str_ret = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str_ret));
     CU_ASSERT_PTR_NULL(str_ret);
 
     // ----
@@ -663,8 +748,9 @@ void test_parse_object_holding_one_element(void)
 
     CU_ASSERT_TRUE(!qn_json_is_empty_object(obj_root));
 
-    str = qn_json_get_string(obj_root, "trivial", NULL);
-    CU_ASSERT_TRUE(str != NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "trivial", &str));
+    CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), "This is a trivial element.") == 0);
 
     qn_json_destroy_object(obj_root);
@@ -814,7 +900,8 @@ void test_parse_object_holding_utf8_string(void)
     ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "工人");
 
@@ -837,7 +924,8 @@ void test_parse_object_holding_string_contains_double_quotes(void)
     ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "ab\"cd\"ef");
 
@@ -860,7 +948,8 @@ void test_parse_object_holding_string_contains_backslash(void)
     ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "\\t");
 
@@ -1034,7 +1123,8 @@ void test_parse_object_string_input_in_two_chunks_1(void)
     ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "农民");
 
@@ -1063,7 +1153,8 @@ void test_parse_object_string_input_in_two_chunks_2(void)
     ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "学生");
 
@@ -1092,7 +1183,8 @@ void test_parse_object_string_input_in_two_chunks_3(void)
     ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "医生");
 
@@ -1121,7 +1213,8 @@ void test_parse_object_string_input_in_two_chunks_4(void)
     ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
     CU_ASSERT_TRUE(ret);
 
-    str = qn_json_get_string(obj_root, "_str", NULL);
+    str = NULL;
+    CU_ASSERT_TRUE(qn_json_obj_get_string(obj_root, "_str", &str));
     CU_ASSERT_PTR_NOT_NULL(str);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "工程师\"");
 
