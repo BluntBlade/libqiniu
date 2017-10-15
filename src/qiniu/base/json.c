@@ -236,7 +236,7 @@ static qn_bool qn_json_obj_set_variant(qn_json_object_ptr restrict obj, const ch
 * @param [in] obj The non-NULL pointer to the object.
 * @retval Integer-Value The current quantity of pairs of the object.
 *******************************************************************************/
-QN_SDK qn_uint qn_json_obj_size(qn_json_object_ptr restrict obj)
+QN_SDK qn_uint16 qn_json_obj_size(qn_json_object_ptr restrict obj)
 {
     assert(obj);
     return obj->cnt;
@@ -657,7 +657,7 @@ QN_SDK void qn_json_arr_destroy(qn_json_array_ptr restrict arr)
 * @param [in] obj The non-NULL pointer to the array.
 * @retval Integer-Value The current quantity of values of the array.
 *******************************************************************************/
-QN_SDK qn_uint qn_json_arr_size(qn_json_array_ptr restrict arr)
+QN_SDK qn_uint16 qn_json_arr_size(qn_json_array_ptr restrict arr)
 {
     assert(arr);
     return arr->cnt;
@@ -665,30 +665,32 @@ QN_SDK qn_uint qn_json_arr_size(qn_json_array_ptr restrict arr)
 
 /* == Set & Get methods == */
 
-static qn_json_variant_ptr qn_json_arr_get_variant(qn_json_array_ptr restrict arr, qn_uint n, qn_json_type type)
+static qn_json_variant_ptr qn_json_arr_get_variant(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_type type)
 {
-    qn_uint16 pos = 0;
     qn_json_variant_ptr vars = NULL;
     qn_json_attribute_ptr attrs = NULL;
 
     assert(arr);
 
     if (arr->cnt == 0 || arr->cnt <= n) {
-        qn_err_set_no_such_entry();
+        qn_err_json_set_out_of_index();
+        return NULL;
+    }
+    if ((qn_uint)arr->cnt + n > 0xFFFF) {
+        qn_err_json_set_out_of_index();
         return NULL;
     }
 
-    pos = (arr->begin + n) & 0xFFFF;
     attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
-    if (attrs[pos].type != type) {
+    if (attrs[arr->begin + n].type != type) {
         qn_err_json_set_not_this_type();
         return NULL;
     }
     vars = qn_json_arr_variant_offset(arr->data, arr->cap);
-    return &vars[pos];
+    return &vars[arr->begin + n];
 }
 
-QN_SDK qn_bool qn_json_arr_get_object(qn_json_array_ptr restrict arr, qn_uint n, qn_json_object_ptr restrict * val)
+QN_SDK qn_bool qn_json_arr_get_object(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_object_ptr restrict * val)
 {
     qn_json_variant_ptr var = qn_json_arr_get_variant(arr, n, QN_JSON_OBJECT);
     if (! var) return qn_false;
@@ -696,7 +698,7 @@ QN_SDK qn_bool qn_json_arr_get_object(qn_json_array_ptr restrict arr, qn_uint n,
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_get_array(qn_json_array_ptr restrict arr, qn_uint n, qn_json_array_ptr restrict * val)
+QN_SDK qn_bool qn_json_arr_get_array(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_array_ptr restrict * val)
 {
     qn_json_variant_ptr var = qn_json_arr_get_variant(arr, n, QN_JSON_ARRAY);
     if (! var) return qn_false;
@@ -704,7 +706,7 @@ QN_SDK qn_bool qn_json_arr_get_array(qn_json_array_ptr restrict arr, qn_uint n, 
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_get_string(qn_json_array_ptr restrict arr, qn_uint n, qn_string restrict * val)
+QN_SDK qn_bool qn_json_arr_get_string(qn_json_array_ptr restrict arr, qn_uint16 n, qn_string restrict * val)
 {
     qn_json_variant_ptr var = qn_json_arr_get_variant(arr, n, QN_JSON_STRING);
     if (! var) return qn_false;
@@ -716,7 +718,7 @@ QN_SDK qn_bool qn_json_arr_get_string(qn_json_array_ptr restrict arr, qn_uint n,
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_get_integer(qn_json_array_ptr restrict arr, qn_uint n, qn_json_integer * val)
+QN_SDK qn_bool qn_json_arr_get_integer(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_integer * val)
 {
     qn_json_variant_ptr var = qn_json_arr_get_variant(arr, n, QN_JSON_INTEGER);
     if (! var) return qn_false;
@@ -724,7 +726,7 @@ QN_SDK qn_bool qn_json_arr_get_integer(qn_json_array_ptr restrict arr, qn_uint n
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_get_number(qn_json_array_ptr restrict arr, qn_uint n, qn_json_number * val)
+QN_SDK qn_bool qn_json_arr_get_number(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_number * val)
 {
     qn_json_variant_ptr var = qn_json_arr_get_variant(arr, n, QN_JSON_NUMBER);
     if (! var) return qn_false;
@@ -732,7 +734,7 @@ QN_SDK qn_bool qn_json_arr_get_number(qn_json_array_ptr restrict arr, qn_uint n,
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_get_boolean(qn_json_array_ptr restrict arr, qn_uint n, qn_bool * val)
+QN_SDK qn_bool qn_json_arr_get_boolean(qn_json_array_ptr restrict arr, qn_uint16 n, qn_bool * val)
 {
     qn_json_variant_ptr var = qn_json_arr_get_variant(arr, n, QN_JSON_BOOLEAN);
     if (! var) return qn_false;
@@ -921,30 +923,32 @@ QN_SDK void qn_json_arr_shift(qn_json_array_ptr restrict arr)
 
 /* ==== */
 
-static qn_bool qn_json_arr_replace_variant(qn_json_array_ptr restrict arr, qn_uint n, qn_json_type type, qn_json_variant_un new_var)
+static qn_bool qn_json_arr_replace_variant(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_type type, qn_json_variant_un new_var)
 {
-    qn_uint16 pos = 0;
     qn_json_variant_ptr vars = NULL;
     qn_json_attribute_ptr attrs = NULL;
 
     assert(arr);
 
-    if ((arr->end - arr->begin) <= n) {
+    if (arr->cnt == 0 || arr->cnt <= n) {
         qn_err_json_set_out_of_index();
         return qn_false;
-    } // if
+    }
+    if ((qn_uint)arr->cnt + n > 0xFFFF) {
+        qn_err_json_set_out_of_index();
+        return qn_false;
+    }
 
     vars = qn_json_arr_variant_offset(arr->data, arr->cap);
     attrs = qn_json_arr_attribute_offset(arr->data, arr->cap);
 
-    pos = (arr->begin + n) & 0xFFFF;
-    qn_json_destroy_variant(attrs[pos].type, &vars[pos]);
+    qn_json_destroy_variant(attrs[arr->begin + n].type, &vars[arr->begin + n]);
     vars[arr->begin + n] = new_var;
     attrs[arr->begin + n].type = type;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_replace_object(qn_json_array_ptr restrict arr, qn_uint n, qn_json_object_ptr restrict val)
+QN_SDK qn_bool qn_json_arr_replace_object(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_object_ptr restrict val)
 {
     qn_json_variant_un new_var;
     assert(val);
@@ -952,7 +956,7 @@ QN_SDK qn_bool qn_json_arr_replace_object(qn_json_array_ptr restrict arr, qn_uin
     return qn_json_arr_replace_variant(arr, n, QN_JSON_OBJECT, new_var);
 }
 
-QN_SDK qn_bool qn_json_arr_replace_array(qn_json_array_ptr restrict arr, qn_uint n, qn_json_array_ptr restrict val)
+QN_SDK qn_bool qn_json_arr_replace_array(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_array_ptr restrict val)
 {
     qn_json_variant_un new_var;
     assert(val);
@@ -960,7 +964,7 @@ QN_SDK qn_bool qn_json_arr_replace_array(qn_json_array_ptr restrict arr, qn_uint
     return qn_json_arr_replace_variant(arr, n, QN_JSON_ARRAY, new_var);
 }
 
-QN_SDK qn_bool qn_json_arr_replace_string(qn_json_array_ptr restrict arr, qn_uint n, qn_string restrict val)
+QN_SDK qn_bool qn_json_arr_replace_string(qn_json_array_ptr restrict arr, qn_uint16 n, qn_string restrict val)
 {
     qn_json_variant_un new_var;
     assert(val);
@@ -972,28 +976,28 @@ QN_SDK qn_bool qn_json_arr_replace_string(qn_json_array_ptr restrict arr, qn_uin
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_arr_replace_integer(qn_json_array_ptr restrict arr, qn_uint n, qn_json_integer val)
+QN_SDK qn_bool qn_json_arr_replace_integer(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_integer val)
 {
     qn_json_variant_un new_var;
     new_var.integer = val;
     return qn_json_arr_replace_variant(arr, n, QN_JSON_INTEGER, new_var);
 }
 
-QN_SDK qn_bool qn_json_arr_replace_number(qn_json_array_ptr restrict arr, qn_uint n, qn_json_number val)
+QN_SDK qn_bool qn_json_arr_replace_number(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_number val)
 {
     qn_json_variant_un new_var;
     new_var.number = val;
     return qn_json_arr_replace_variant(arr, n, QN_JSON_NUMBER, new_var);
 }
 
-QN_SDK qn_bool qn_json_arr_replace_boolean(qn_json_array_ptr restrict arr, qn_uint n, qn_bool val)
+QN_SDK qn_bool qn_json_arr_replace_boolean(qn_json_array_ptr restrict arr, qn_uint16 n, qn_bool val)
 {
     qn_json_variant_un new_var;
     new_var.boolean = val;
     return qn_json_arr_replace_variant(arr, n, QN_JSON_BOOLEAN, new_var);
 }
 
-QN_SDK qn_bool qn_json_arr_replace_null(qn_json_array_ptr restrict arr, qn_uint n)
+QN_SDK qn_bool qn_json_arr_replace_null(qn_json_array_ptr restrict arr, qn_uint16 n)
 {
     qn_json_variant_un new_var;
     new_var.integer = 0;
