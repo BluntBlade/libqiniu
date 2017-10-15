@@ -318,6 +318,7 @@ static qn_json_variant_ptr qn_json_obj_get_variant(qn_json_object_ptr restrict o
     attrs = qn_json_obj_attribute_offset(obj->data, obj->cap);
     if (attrs[pos].type != type) {
         qn_err_json_set_not_this_type();
+        return NULL;
     }
 
     vars = qn_json_obj_variant_offset(obj->data, obj->cap);
@@ -398,12 +399,8 @@ QN_SDK qn_bool qn_json_obj_set_string(qn_json_object_ptr restrict obj, const cha
 {
     qn_json_variant_un new_var;
     assert(val);
-    if (! (new_var.string = qn_str_duplicate(val))) return qn_false;
-    if (! qn_json_obj_set_variant(obj, key, QN_JSON_STRING, new_var)) {
-        qn_str_destroy(new_var.string);
-        return qn_false;
-    } // if
-    return qn_true;
+    new_var.string = val;
+    return qn_json_obj_set_variant(obj, key, QN_JSON_STRING, new_var);
 }
 
 QN_SDK qn_bool qn_json_obj_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_integer val)
@@ -907,12 +904,8 @@ QN_SDK qn_bool qn_json_arr_push_string(qn_json_array_ptr restrict arr, qn_string
 {
     qn_json_variant_un new_var;
     assert(val);
-    if (! (new_var.string = qn_str_duplicate(val))) return qn_false;
-    if (! qn_json_arr_push_variant(arr, QN_JSON_STRING, new_var)) {
-        qn_str_destroy(new_var.string);
-        return qn_false;
-    } // if
-    return qn_true;
+    new_var.string = val;
+    return qn_json_arr_push_variant(arr, QN_JSON_STRING, new_var);
 }
 
 QN_SDK qn_bool qn_json_arr_push_integer(qn_json_array_ptr restrict arr, qn_json_integer val)
@@ -951,7 +944,7 @@ QN_SDK qn_bool qn_json_arr_push_null(qn_json_array_ptr restrict arr)
 * @param [in] arr The non-NULL pointer to the target array.
 * @retval NONE
 *******************************************************************************/
-QN_SDK void qn_json_pop(qn_json_array_ptr restrict arr)
+QN_SDK void qn_json_arr_pop(qn_json_array_ptr restrict arr)
 {
     qn_json_variant_ptr vars = NULL;
     qn_json_attribute_ptr attrs = NULL;
@@ -999,12 +992,8 @@ QN_SDK qn_bool qn_json_arr_unshift_string(qn_json_array_ptr restrict arr, qn_str
     assert(arr);
     assert(val);
 
-    if (! (new_var.string = qn_str_duplicate(val))) return qn_false;
-    if (! qn_json_arr_unshift_variant(arr, QN_JSON_STRING, new_var)) {
-        qn_str_destroy(new_var.string);
-        return qn_false;
-    } // if
-    return qn_true;
+    new_var.string = val;
+    return qn_json_arr_unshift_variant(arr, QN_JSON_STRING, new_var);
 }
 
 QN_SDK qn_bool qn_json_arr_unshift_integer(qn_json_array_ptr restrict arr, qn_json_integer val)

@@ -120,9 +120,9 @@ static inline qn_bool qn_json_obj_set_cstr(qn_json_object_ptr restrict obj, cons
     if (! new_str) return qn_false;
     if (! qn_json_obj_set_string(obj, key, new_str)) {
         qn_str_destroy(new_str);
-        return qn_true;
+        return qn_false;
     }
-    return qn_false;
+    return qn_true;
 }
 
 static inline qn_bool qn_json_obj_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, qn_size val_size)
@@ -131,9 +131,9 @@ static inline qn_bool qn_json_obj_set_text(qn_json_object_ptr restrict obj, cons
     if (! new_str) return qn_false;
     if (! qn_json_obj_set_string(obj, key, new_str)) {
         qn_str_destroy(new_str);
-        return qn_true;
+        return qn_false;
     }
-    return qn_false;
+    return qn_true;
 }
 
 QN_SDK extern void qn_json_obj_unset(qn_json_object_ptr restrict obj, const char * restrict key);
@@ -187,9 +187,9 @@ static inline qn_bool qn_json_arr_push_cstr(qn_json_array_ptr restrict arr, cons
     if (! new_str) return qn_false;
     if (! qn_json_arr_push_string(arr, new_str)) {
         qn_str_destroy(new_str);
-        return qn_true;
+        return qn_false;
     }
-    return qn_false;
+    return qn_true;
 }
 
 static inline qn_bool qn_json_arr_push_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size val_size)
@@ -198,9 +198,9 @@ static inline qn_bool qn_json_arr_push_text(qn_json_array_ptr restrict arr, cons
     if (! new_str) return qn_false;
     if (! qn_json_arr_push_string(arr, new_str)) {
         qn_str_destroy(new_str);
-        return qn_true;
+        return qn_false;
     }
-    return qn_false;
+    return qn_true;
 }
 
 QN_SDK extern void qn_json_arr_pop(qn_json_array_ptr restrict arr);
@@ -221,9 +221,9 @@ static inline qn_bool qn_json_arr_unshift_cstr(qn_json_array_ptr restrict arr, c
     if (! new_str) return qn_false;
     if (! qn_json_arr_unshift_string(arr, new_str)) {
         qn_str_destroy(new_str);
-        return qn_true;
+        return qn_false;
     }
-    return qn_false;
+    return qn_true;
 }
 
 static inline qn_bool qn_json_arr_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size val_size)
@@ -232,9 +232,9 @@ static inline qn_bool qn_json_arr_unshift_text(qn_json_array_ptr restrict arr, c
     if (! new_str) return qn_false;
     if (! qn_json_arr_unshift_string(arr, new_str)) {
         qn_str_destroy(new_str);
-        return qn_true;
+        return qn_false;
     }
-    return qn_false;
+    return qn_true;
 }
 
 QN_SDK extern void qn_json_arr_shift(qn_json_array_ptr restrict arr);

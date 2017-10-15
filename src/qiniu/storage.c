@@ -1808,8 +1808,10 @@ QN_SDK qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, cons
         ops = qn_cs_join_va(";", cmd1, cmd2, ap);
         va_end(ap);
         if (!ops) return qn_false;
-        ret = qn_json_obj_set_string(pp, "persistentOps", ops);
-        qn_str_destroy(ops);
+        if (! qn_json_obj_set_string(pp, "persistentOps", ops)) {
+            qn_str_destroy(ops);
+            return qn_false;
+        } // if
     } // if
 
     if (ret && pipeline && strlen(pipeline) > 0) ret = qn_json_obj_set_cstr(pp, "persistentPipeline", pipeline);
@@ -1827,8 +1829,10 @@ QN_SDK qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, 
     } else {
         ops = qn_cs_join_list(";", cmds, cmd_count);
         if (!ops) return qn_false;
-        ret = qn_json_obj_set_string(pp, "persistentOps", ops);
-        qn_str_destroy(ops);
+        if (! qn_json_obj_set_string(pp, "persistentOps", ops)) {
+            qn_str_destroy(ops);
+            return qn_false;
+        } // if
     } // if
     
     if (ret && pipeline && strlen(pipeline) > 0) ret = qn_json_obj_set_cstr(pp, "persistentPipeline", pipeline);
@@ -1848,7 +1852,6 @@ QN_SDK qn_bool qn_stor_pp_mime_enable_auto_detecting(qn_json_object_ptr restrict
 QN_SDK qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...)
 {
     va_list ap;
-    qn_bool ret = qn_false;
     qn_string mime_str = NULL;
 
     if (!mime2) return qn_json_obj_set_cstr(pp, "mimeLimit", mime1); // Only one mime passed.
@@ -1858,14 +1861,15 @@ QN_SDK qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char 
     va_end(ap);
     if (!mime_str) return qn_false;
 
-    ret = qn_json_obj_set_string(pp, "mimeLimit", mime_str);
-    qn_str_destroy(mime_str);
-    return ret;
+    if (! qn_json_obj_set_string(pp, "mimeLimit", mime_str)) {
+        qn_str_destroy(mime_str);
+        return qn_false;
+    } // if
+    return qn_true;
 }
 
 QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, qn_uint mime_count)
 {
-    qn_bool ret = qn_false;
     qn_string mime_str = NULL;
     
     if (mime_count == 1) return qn_json_obj_set_cstr(pp, "mimeLimit", mime_list[0]);
@@ -1873,15 +1877,16 @@ QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const 
     mime_str = qn_cs_join_list(";", mime_list, mime_count);
     if (!mime_str) return qn_false;
 
-    ret = qn_json_obj_set_string(pp, "mimeLimit", mime_str);
-    qn_str_destroy(mime_str);
-    return ret;
+    if (! qn_json_obj_set_string(pp, "mimeLimit", mime_str)) {
+        qn_str_destroy(mime_str);
+        return qn_false;
+    } // if
+    return qn_true;
 }
 
 QN_SDK qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...)
 {
     va_list ap;
-    qn_bool ret;
     qn_string deny_mime_str;
     qn_string mime_str;
 
@@ -1897,14 +1902,15 @@ QN_SDK qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char *
         if (!deny_mime_str) return qn_false;
     } // if
 
-    ret = qn_json_obj_set_string(pp, "mimeLimit", deny_mime_str);
-    qn_str_destroy(deny_mime_str);
-    return ret;
+    if (! qn_json_obj_set_string(pp, "mimeLimit", deny_mime_str)) {
+        qn_str_destroy(deny_mime_str);
+        return qn_false;
+    } // if
+    return qn_true;
 }
 
 QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, qn_uint mime_count)
 {
-    qn_bool ret;
     qn_string deny_mime_str;
     qn_string mime_str;
     
@@ -1918,9 +1924,11 @@ QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const c
     } // if
     if (!deny_mime_str) return qn_false;
 
-    ret = qn_json_obj_set_string(pp, "mimeLimit", deny_mime_str);
-    qn_str_destroy(deny_mime_str);
-    return ret;
+    if (! qn_json_obj_set_string(pp, "mimeLimit", deny_mime_str)) {
+        qn_str_destroy(deny_mime_str);
+        return qn_false;
+    } // if
+    return qn_true;
 }
 
 QN_SDK qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_json_integer min_size)
