@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
 
     if (argc > 6) {
         if (! qn_stor_pp_upload_message(put_policy, argv[6], argv[7], argv[8])) {
-            qn_json_destroy_object(put_policy);
+            qn_json_obj_destroy(put_policy);
             qn_mac_destroy(mac);
             printf("Cannot fill the message informaiton into queue fields due to application error `%s`.\n", qn_err_get_message());
             return 1;
@@ -58,7 +58,7 @@ int main(int argc, char * argv[])
     } // if
 
     uptoken = qn_stor_pp_to_uptoken(put_policy, mac);
-    qn_json_destroy_object(put_policy);
+    qn_json_obj_destroy(put_policy);
     qn_mac_destroy(mac);
     if (! uptoken) {
         printf("Cannot make an uptoken due to application error `%s`.\n", qn_err_get_message());

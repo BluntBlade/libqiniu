@@ -59,13 +59,13 @@ int main(int argc, char * argv[])
 
                 if (! ud_vars && ! (ud_vars = qn_ud_var_create())) {
                     printf("Cannot create a user-defined variable table due to application error `%s`\n", qn_err_get_message());
-                    qn_json_destroy_object(put_policy);
+                    qn_json_obj_destroy(put_policy);
                     exit(1);
                 } // if
 
                 if (! qn_ud_var_set_raw(ud_vars, argv[i], pos - argv[i], pos + 1, strlen(pos + 1))) {
                     printf("Cannot set a user-defined variable table due to application error `%s`\n", qn_err_get_message());
-                    qn_json_destroy_object(put_policy);
+                    qn_json_obj_destroy(put_policy);
                     exit(1);
                 } // if
             } else {
@@ -88,20 +88,20 @@ int main(int argc, char * argv[])
         if (return_url) {
             if (! qn_stor_pp_return_to_server(put_policy, return_url, return_body)) {
                 printf("Cannot set return url and body due to application error `%s`\n", qn_err_get_message());
-                qn_json_destroy_object(put_policy);
+                qn_json_obj_destroy(put_policy);
                 exit(1);
             } // if
         } else if (return_body) {
             if (! qn_stor_pp_return_to_client(put_policy, return_body)) {
                 printf("Cannot set return url and body due to application error `%s`\n", qn_err_get_message());
-                qn_json_destroy_object(put_policy);
+                qn_json_obj_destroy(put_policy);
                 exit(1);
             } // if
         } // if
     } // if
 
     uptoken = qn_stor_pp_to_uptoken(put_policy, mac);
-    qn_json_destroy_object(put_policy);
+    qn_json_obj_destroy(put_policy);
     qn_mac_destroy(mac);
     if (! uptoken) {
         printf("Cannot make an uptoken due to application error `%s`.\n", qn_err_get_message());

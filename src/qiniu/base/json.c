@@ -42,8 +42,8 @@ static inline qn_uint32 qn_json_round_to_multiple_of_8(qn_uint32 n)
 static inline void qn_json_destroy_variant(qn_json_type type, qn_json_variant_ptr restrict var)
 {
     switch (type) {
-        case QN_JSON_OBJECT: qn_json_destroy_object(var->object); break;
-        case QN_JSON_ARRAY: qn_json_destroy_array(var->array); break;
+        case QN_JSON_OBJECT: qn_json_obj_destroy(var->object); break;
+        case QN_JSON_ARRAY: qn_json_arr_destroy(var->array); break;
         case QN_JSON_STRING: qn_str_destroy(var->string); break;
         default: break;
     } // switch
@@ -95,7 +95,7 @@ typedef struct _QN_JSON_OBJECT
 * @retval non-NULL A pointer to the new JSON object.
 * @retval NULL Failed in creation and an error code is set.
 *******************************************************************************/
-QN_SDK qn_json_object_ptr qn_json_create_object(void)
+QN_SDK qn_json_object_ptr qn_json_obj_create(void)
 {
     qn_json_object_ptr new_obj = calloc(1, sizeof(qn_json_object_st));
     if (! new_obj) {
@@ -116,7 +116,7 @@ QN_SDK qn_json_object_ptr qn_json_create_object(void)
 * @param [in] obj The pointer to the object to destroy.
 * @retval NONE
 *******************************************************************************/
-QN_SDK void qn_json_destroy_object(qn_json_object_ptr restrict obj)
+QN_SDK void qn_json_obj_destroy(qn_json_object_ptr restrict obj)
 {
     qn_uint16 i = 0;
     qn_string * keys = NULL;
@@ -226,56 +226,6 @@ static qn_bool qn_json_obj_set_variant(qn_json_object_ptr restrict obj, const ch
     return qn_true;
 }
 
-/***************************************************************************//**
-* @ingroup JSON-Object
-*
-* Create a new object and then set it as an element into the target object.
-*
-* @param [in] obj The non-NULL pointer to the target object.
-* @param [in] key The key of the new object.
-* @retval non-NULL The pointer to the new object.
-* @retval NULL Failed in creation or setting, and an error code is set.
-*******************************************************************************/
-QN_SDK qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restrict obj, const char * restrict key)
-{
-    qn_json_variant_un new_var;
-
-    assert(obj);
-    assert(key);
-
-    new_var.object = qn_json_create_object();
-    if (new_var.object && ! qn_json_obj_set_variant(obj, key, QN_JSON_OBJECT, new_var)) {
-        qn_json_destroy_object(new_var.object);
-        return NULL;
-    } // if
-    return new_var.object;
-}
-
-/***************************************************************************//**
-* @ingroup JSON-Object
-*
-* Create a new array and then set it as an element into the target object.
-*
-* @param [in] obj The non-NULL pointer to the target object.
-* @param [in] key The key of the new array.
-* @retval non-NULL The pointer to the new array.
-* @retval NULL Failed in creation or setting, and an error code is set.
-*******************************************************************************/
-QN_SDK qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restrict obj, const char * restrict key)
-{
-    qn_json_variant_un new_var;
-
-    assert(obj);
-    assert(key);
-
-    new_var.array = qn_json_create_array();
-    if (new_var.array && ! qn_json_obj_set_variant(obj, key, QN_JSON_ARRAY, new_var)) {
-        qn_json_destroy_array(new_var.array);
-        return NULL;
-    } // if
-    return new_var.array;
-}
-
 /* == Property methods == */
 
 /***************************************************************************//**
@@ -286,7 +236,7 @@ QN_SDK qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restric
 * @param [in] obj The non-NULL pointer to the object.
 * @retval Integer-Value The current quantity of pairs of the object.
 *******************************************************************************/
-QN_SDK qn_uint qn_json_object_size(qn_json_object_ptr restrict obj)
+QN_SDK qn_uint qn_json_obj_size(qn_json_object_ptr restrict obj)
 {
     assert(obj);
     return obj->cnt;
@@ -579,7 +529,7 @@ typedef struct _QN_JSON_ARRAY
 * @retval non-NULL A pointer to the new JSON array.
 * @retval NULL Failed in creation and an error code is set.
 *******************************************************************************/
-QN_SDK qn_json_array_ptr qn_json_create_array(void)
+QN_SDK qn_json_array_ptr qn_json_arr_create(void)
 {
     qn_json_array_ptr new_arr = calloc(1, sizeof(qn_json_array_st));
     if (! new_arr) {
@@ -656,52 +606,6 @@ static qn_bool qn_json_arr_push_variant(qn_json_array_ptr restrict arr, qn_json_
     return qn_true;
 }
 
-/***************************************************************************//**
-* @ingroup JSON-Array
-*
-* Create a new object and then push it as an element into the target array.
-*
-* @param [in] obj The non-NULL pointer to the target array.
-* @retval non-NULL The pointer to the new object.
-* @retval NULL Failed in creation or setting, and an error code is set.
-*******************************************************************************/
-QN_SDK qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restrict arr)
-{
-    qn_json_variant_un new_var;
-
-    assert(arr);
-
-    new_var.object = qn_json_create_object();
-    if (new_var.object && ! qn_json_arr_push_variant(arr, QN_JSON_OBJECT, new_var)) {
-        qn_json_destroy_object(new_var.object);
-        return NULL;
-    } // if
-    return new_var.object;
-}
-
-/***************************************************************************//**
-* @ingroup JSON-Array
-*
-* Create a new array and then push it as an element into the target array.
-*
-* @param [in] obj The non-NULL pointer to the target array.
-* @retval non-NULL The pointer to the new array.
-* @retval NULL Failed in creation or setting, and an error code is set.
-*******************************************************************************/
-QN_SDK qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restrict arr)
-{
-    qn_json_variant_un new_var;
-
-    assert(arr);
-
-    new_var.array = qn_json_create_array();
-    if (new_var.array && ! qn_json_arr_push_variant(arr, QN_JSON_ARRAY, new_var)) {
-        qn_json_destroy_array(new_var.array);
-        return NULL;
-    } // if
-    return new_var.array;
-}
-
 static qn_bool qn_json_arr_unshift_variant(qn_json_array_ptr restrict arr, qn_json_type type, qn_json_variant_un new_var)
 {
     qn_json_variant_ptr vars = NULL;
@@ -722,58 +626,12 @@ static qn_bool qn_json_arr_unshift_variant(qn_json_array_ptr restrict arr, qn_js
 /***************************************************************************//**
 * @ingroup JSON-Array
 *
-* Create a new object and then unshift it as an element into the target array.
-*
-* @param [in] obj The non-NULL pointer to the target array.
-* @retval non-NULL The pointer to the new object.
-* @retval NULL Failed in creation or setting, and an error code is set.
-*******************************************************************************/
-QN_SDK qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr restrict arr)
-{
-    qn_json_variant_un new_var;
-
-    assert(arr);
-
-    new_var.object = qn_json_create_object();
-    if (new_var.object && ! qn_json_arr_unshift_variant(arr, QN_JSON_OBJECT, new_var)) {
-        qn_json_destroy_object(new_var.object);
-        return NULL;
-    } // if
-    return new_var.object;
-}
-
-/***************************************************************************//**
-* @ingroup JSON-Array
-*
-* Create a new array and then unshift it as an element into the target array.
-*
-* @param [in] obj The non-NULL pointer to the target array.
-* @retval non-NULL The pointer to the new array.
-* @retval NULL Failed in creation or setting, and an error code is set.
-*******************************************************************************/
-QN_SDK qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr restrict arr)
-{
-    qn_json_variant_un new_var;
-
-    assert(arr);
-
-    new_var.array = qn_json_create_array();
-    if (new_var.array && ! qn_json_arr_unshift_variant(arr, QN_JSON_ARRAY, new_var)) {
-        qn_json_destroy_array(new_var.array);
-        return NULL;
-    } // if
-    return new_var.array;
-}
-
-/***************************************************************************//**
-* @ingroup JSON-Array
-*
 * Destruct and deallocate a JSON array.
 *
 * @param [in] arr The pointer to the array to destroy.
 * @retval NONE
 *******************************************************************************/
-QN_SDK void qn_json_destroy_array(qn_json_array_ptr restrict arr)
+QN_SDK void qn_json_arr_destroy(qn_json_array_ptr restrict arr)
 {
     qn_uint16 i = 0;
     qn_json_variant_ptr vars = NULL;
@@ -799,7 +657,7 @@ QN_SDK void qn_json_destroy_array(qn_json_array_ptr restrict arr)
 * @param [in] obj The non-NULL pointer to the array.
 * @retval Integer-Value The current quantity of values of the array.
 *******************************************************************************/
-QN_SDK qn_uint qn_json_array_size(qn_json_array_ptr restrict arr)
+QN_SDK qn_uint qn_json_arr_size(qn_json_array_ptr restrict arr)
 {
     assert(arr);
     return arr->cnt;

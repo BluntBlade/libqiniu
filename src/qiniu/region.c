@@ -594,7 +594,7 @@ static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_re
     if (qn_json_obj_get_object(root, "http", &scheme_table)) {
         entry_list = NULL;
         if (! qn_json_obj_get_array(scheme_table, "io", &entry_list)) return qn_false;
-        for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
+        for (i = 0; entry_list && i < qn_json_arr_size(entry_list); i += 1) {
             str = NULL;
             if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
             ret = qn_rgn_svc_parse_and_add_entry(str, io);
@@ -603,7 +603,7 @@ static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_re
 
         entry_list = NULL;
         if (! qn_json_obj_get_array(scheme_table, "up", &entry_list)) return qn_false;
-        for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
+        for (i = 0; entry_list && i < qn_json_arr_size(entry_list); i += 1) {
             str = NULL;
             if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
             ret = qn_rgn_svc_parse_and_add_entry(str, up);
@@ -615,7 +615,7 @@ static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_re
     if (qn_json_obj_get_object(root, "https", &scheme_table)) {
         entry_list = NULL;
         if (! qn_json_obj_get_array(scheme_table, "io", &entry_list)) return qn_false;
-        for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
+        for (i = 0; entry_list && i < qn_json_arr_size(entry_list); i += 1) {
             str = NULL;
             if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
             ret = qn_rgn_svc_parse_and_add_entry(str, io);
@@ -624,7 +624,7 @@ static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_re
 
         entry_list = NULL;
         if (! qn_json_obj_get_array(scheme_table, "up", &entry_list)) return qn_false;
-        for (i = 0; entry_list && i < qn_json_array_size(entry_list); i += 1) {
+        for (i = 0; entry_list && i < qn_json_arr_size(entry_list); i += 1) {
             str = NULL;
             if (! qn_json_arr_get_string(entry_list, i, &str)) return qn_false;
             ret = qn_rgn_svc_parse_and_add_entry(str, up);
@@ -680,13 +680,13 @@ QN_SDK qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
 
     if (ret) {
         if (! (new_rgn = qn_rgn_create(bucket))) {
-            qn_json_destroy_object(root);
+            qn_json_obj_destroy(root);
             return qn_false;
         } // if
 
         if (!qn_rgn_svc_extract_and_add_entries(root, new_rgn)) {
             qn_rgn_destroy(new_rgn);
-            qn_json_destroy_object(root);
+            qn_json_obj_destroy(root);
             return qn_false;
         } // if
 
@@ -694,7 +694,7 @@ QN_SDK qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
         qn_rgn_destroy(new_rgn);
     } // if
     // TODO: Deal with the case that API return no value.
-    qn_json_destroy_object(root);
+    qn_json_obj_destroy(root);
     return ret;
 }
 

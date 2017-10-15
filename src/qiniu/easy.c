@@ -487,7 +487,7 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         } else {
             rgn_host = qn_easy_select_putting_region_host(easy, uptoken, &pp, &real_ext);
             if (! rgn_host) {
-                qn_json_destroy_object(pp);
+                qn_json_obj_destroy(pp);
                 return NULL;
             } // if
         } // if
@@ -495,14 +495,14 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
 
     if (! real_ext.attr.final_key) {
         if (! qn_easy_check_putting_key(easy, uptoken, &pp, &real_ext)) {
-            qn_json_destroy_object(pp);
+            qn_json_obj_destroy(pp);
             return NULL;
         } // if
     } // if
 
     io_rdr = qn_easy_create_put_reader(fname, &real_ext);
     if (! io_rdr) {
-        qn_json_destroy_object(pp);
+        qn_json_obj_destroy(pp);
         return NULL;
     } // if
 
@@ -525,7 +525,7 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
     } // if
 
     qn_io_rdr_close(io_rdr);
-    qn_json_destroy_object(pp);
+    qn_json_obj_destroy(pp);
 
     if (! put_ret) return put_ret;
     
@@ -561,20 +561,20 @@ QN_SDK qn_json_object_ptr qn_easy_put_huge_file(qn_easy_ptr restrict easy, const
     qn_easy_init_put_extra(ext, &real_ext);
     if (! real_ext.attr.final_key) {
         if (! qn_easy_check_putting_key(easy, uptoken, &pp, &real_ext)) {
-            qn_json_destroy_object(pp);
+            qn_json_obj_destroy(pp);
             return NULL;
         } // if
     } // if
 
     fl = qn_fl_open(fname, NULL);
     if (! fl) {
-        qn_json_destroy_object(pp);
+        qn_json_obj_destroy(pp);
         return NULL;
     } // if
 
     put_ret = qn_easy_put_huge(easy, uptoken, qn_fl_to_io_reader(fl), &real_ext);
     qn_fl_close(fl);
-    qn_json_destroy_object(pp);
+    qn_json_obj_destroy(pp);
     return put_ret;
 }
 
@@ -672,7 +672,7 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
             return list_ret;
         } // if
 
-        for (i = 0; i < qn_json_array_size(items); i += 1) {
+        for (i = 0; i < qn_json_arr_size(items); i += 1) {
             item = NULL;
             if (! qn_json_arr_get_object(items, i, &item)) return NULL;
             if (! itr_cb(itr_data, item)) {
@@ -686,7 +686,7 @@ QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_p
             qn_stor_lse_destroy(lse);
             return NULL;
         }
-    } while (qn_json_array_size(items) == real_ext.limit && marker);
+    } while (qn_json_arr_size(items) == real_ext.limit && marker);
 
     return list_ret;
 }

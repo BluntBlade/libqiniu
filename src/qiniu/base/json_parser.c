@@ -568,10 +568,10 @@ static void qn_json_prs_reset(qn_json_parser_ptr restrict prs)
     while (prs->cnt > 0) {
         prs->cnt -= 1;
         if (prs->lvl[prs->cnt].type == QN_JSON_OBJECT) {
-            qn_json_destroy_object(prs->lvl[prs->cnt].elem.object);
+            qn_json_obj_destroy(prs->lvl[prs->cnt].elem.object);
             qn_str_destroy(prs->lvl[prs->cnt].key);
         } else {
-            qn_json_destroy_array(prs->lvl[prs->cnt].elem.array);
+            qn_json_arr_destroy(prs->lvl[prs->cnt].elem.array);
         } // if
     } // while
 }
@@ -645,13 +645,13 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 return qn_false;
             } // if
             if (lvl->type == QN_JSON_OBJECT) {
-                if (! (new_obj = qn_json_create_and_set_object(lvl->elem.object, lvl->key))) return qn_false;
+                if (! (new_obj = qn_json_obj_set_new_empty_object(lvl->elem.object, lvl->key))) return qn_false;
                 new_elem.object = new_obj;
                 if (!qn_json_prs_push(prs, QN_JSON_OBJECT, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
             } else {
-                if (! (new_obj = qn_json_create_and_push_object(lvl->elem.array)) ) return qn_false;
+                if (! (new_obj = qn_json_arr_push_new_empty_object(lvl->elem.array)) ) return qn_false;
                 new_elem.object = new_obj;
                 if (!qn_json_prs_push(prs, QN_JSON_OBJECT, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
             }
@@ -663,13 +663,13 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
                 return qn_false;
             } // if
             if (lvl->type == QN_JSON_OBJECT) {
-                if (! (new_arr = qn_json_create_and_set_array(lvl->elem.object, lvl->key))) return qn_false;
+                if (! (new_arr = qn_json_obj_set_new_empty_array(lvl->elem.object, lvl->key))) return qn_false;
                 new_elem.array = new_arr;
                 if (!qn_json_prs_push(prs, QN_JSON_ARRAY, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
             } else {
-                if (! (new_arr = qn_json_create_and_push_array(lvl->elem.array)) ) return qn_false;
+                if (! (new_arr = qn_json_arr_push_new_empty_array(lvl->elem.array)) ) return qn_false;
                 new_elem.array = new_arr;
                 if (!qn_json_prs_push(prs, QN_JSON_ARRAY, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
             }
@@ -950,11 +950,11 @@ QN_SDK qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const c
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
             if (*root) {
                 prs->elem.object = *root;
-            } else if (! (prs->elem.object = qn_json_create_object()) ) {
+            } else if (! (prs->elem.object = qn_json_obj_create()) ) {
                 return qn_false;
             } // if
             if (!qn_json_prs_push(prs, QN_JSON_OBJECT, prs->elem, QN_JSON_PARSING_KEY)) {
-                if (!*root) qn_json_destroy_object(prs->elem.object);
+                if (!*root) qn_json_obj_destroy(prs->elem.object);
                 return qn_false;
             }
         } else {
@@ -967,7 +967,7 @@ QN_SDK qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const c
     if (!qn_json_prs_parse(prs)) {
         if (!qn_err_json_is_need_more_text_input()) {
             qn_json_prs_reset(prs);
-            if (!*root) qn_json_destroy_object(prs->elem.object);
+            if (!*root) qn_json_obj_destroy(prs->elem.object);
         } // if
         return qn_false;
     } // if
@@ -991,11 +991,11 @@ QN_SDK qn_bool qn_json_prs_parse_array(qn_json_parser_ptr restrict prs, const ch
         if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
             if (*root) {
                 prs->elem.array = *root;
-            } else if (! (prs->elem.array = qn_json_create_array()) ) {
+            } else if (! (prs->elem.array = qn_json_arr_create()) ) {
                 return qn_false;
             } // if
             if (!qn_json_prs_push(prs, QN_JSON_ARRAY, prs->elem, QN_JSON_PARSING_VALUE)) {
-                if (!*root) qn_json_destroy_array(prs->elem.array);
+                if (!*root) qn_json_arr_destroy(prs->elem.array);
                 return qn_false;
             } // if
         } else {
@@ -1008,7 +1008,7 @@ QN_SDK qn_bool qn_json_prs_parse_array(qn_json_parser_ptr restrict prs, const ch
     if (!qn_json_prs_parse(prs)) {
         if (!qn_err_json_is_need_more_text_input()) {
             qn_json_prs_reset(prs);
-            if (!*root) qn_json_destroy_array(prs->elem.array);
+            if (!*root) qn_json_arr_destroy(prs->elem.array);
         } // if
         return qn_false;
     } // if
