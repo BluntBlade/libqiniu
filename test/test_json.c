@@ -13,7 +13,7 @@
 void test_manipulate_object(void)
 {
     qn_json_integer n = 0;
-    qn_number num_val = 0.0L;
+    qn_json_number num_val = 0.0L;
     qn_json_object_ptr obj_root = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
@@ -437,7 +437,7 @@ void test_obj_set()
     qn_json_object_ptr obj_ret = NULL;
     qn_json_array_ptr arr_ret = NULL;
     qn_string str_ret = NULL;
-    qn_integer int_ret = 0;
+    qn_json_integer int_ret = 0;
     char buf[] = {"A line for creating string element."};
     qn_size buf_len = strlen(buf);
 
@@ -498,8 +498,8 @@ void test_obj_set()
 void test_manipulate_array(void)
 {
     qn_bool bool_val;
-    qn_integer int_val;
-    qn_number num_val;
+    qn_json_integer int_val;
+    qn_json_number num_val;
     qn_json_array_ptr arr_root = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
@@ -577,8 +577,8 @@ void test_arr_replace()
     qn_json_array_ptr arr_ret = NULL;
     qn_bool bool_val = qn_false;
     qn_string str_ret = NULL;
-    qn_integer int_ret = 0;
-    qn_number num_ret = 0.0;
+    qn_json_integer int_ret = 0;
+    qn_json_number num_ret = 0.0;
     char buf[] = {"A line for creating string element."};
     qn_size buf_len = strlen(buf);
 
@@ -787,7 +787,7 @@ void test_parse_object_holding_two_elements(void)
 void test_parse_object_holding_ordinary_elements(void)
 {
     qn_bool ok = qn_false;
-    qn_number num_val = 0.0L;
+    qn_json_number num_val = 0.0L;
     qn_bool bool_val = qn_false;
     const char buf[] = {"{\"_num\":+123.456,\"_true\":true,\"_false\":false,\"_null\":null}"};
     qn_size buf_len = strlen(buf);
@@ -859,7 +859,7 @@ void test_parse_object_holding_empty_complex_elements(void)
 void test_parse_object_holding_embedded_objects(void)
 {
     qn_bool ok = qn_false;
-    qn_number num_val = 0.0L;
+    qn_json_number num_val = 0.0L;
     qn_bool bool_val = qn_false;
     const char buf[] = {"{\"_obj\":{\"_num\":+123.456,\"_true\":true,\"_false\":false,\"_null\":null},\"_obj2\":{}}"};
     qn_size buf_len = strlen(buf);
@@ -1106,7 +1106,7 @@ void test_parse_object_string_input_in_two_chunks_1(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"农民\"}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_string str;
+    qn_string str = NULL;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1133,7 +1133,7 @@ void test_parse_object_string_input_in_two_chunks_2(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"生\"}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_string str;
+    qn_string str = NULL;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1160,7 +1160,7 @@ void test_parse_object_string_input_in_two_chunks_3(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"\"}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_string str;
+    qn_string str = NULL;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1187,7 +1187,7 @@ void test_parse_object_string_input_in_two_chunks_4(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"\"\"}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_string str;
+    qn_string str = NULL;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1240,7 +1240,7 @@ void test_parse_object_true_value_input_in_two_chunks_1(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"rue}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_boolean bool_val = qn_false;
+    qn_bool bool_val = qn_false;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1266,7 +1266,7 @@ void test_parse_object_true_value_input_in_two_chunks_2(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"ue}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_boolean bool_val = qn_false;
+    qn_bool bool_val = qn_false;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1292,7 +1292,7 @@ void test_parse_object_true_value_input_in_two_chunks_3(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"e}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_boolean bool_val = qn_false;
+    qn_bool bool_val = qn_false;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1318,7 +1318,7 @@ void test_parse_object_false_value_input_in_two_chunks_1(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"alse}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_boolean bool_val = qn_false;
+    qn_bool bool_val = qn_false;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1344,7 +1344,7 @@ void test_parse_object_false_value_input_in_two_chunks_2(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"se}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_boolean bool_val = qn_false;
+    qn_bool bool_val = qn_false;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1370,7 +1370,7 @@ void test_parse_object_false_value_input_in_two_chunks_3(void)
     qn_size buf_len = strlen(buf);
     const char buf2[] = {"e}"};
     qn_size buf2_len = strlen(buf2);
-    qn_json_boolean bool_val = qn_false;
+    qn_bool bool_val = qn_false;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -1447,7 +1447,7 @@ void test_parse_array_holding_one_element(void)
 void test_parse_array_holding_two_elements(void)
 {
     qn_bool ok = qn_false;
-    qn_integer int_val;
+    qn_json_integer int_val;
     const char buf[] = {"[\"This is a trivial element.\",-123]"};
     qn_size buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
@@ -1475,7 +1475,7 @@ void test_parse_array_holding_ordinary_elements(void)
 {
     qn_bool ok = qn_false;
     qn_bool bool_val;
-    qn_number num_val;
+    qn_json_number num_val;
     const char buf[] = {"[+123.456,true,false,null]"};
     qn_size buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
@@ -1546,7 +1546,7 @@ void test_parse_array_holding_embedded_arrays(void)
 {
     qn_bool ok = qn_false;
     qn_bool bool_val;
-    qn_number num_val;
+    qn_json_number num_val;
     const char buf[] = {"[[+123.456,true,false,null],[]]"};
     qn_size buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;

@@ -49,8 +49,6 @@ typedef struct _QN_JSON_OBJECT * qn_json_object_ptr;
 struct _QN_JSON_ARRAY;
 typedef struct _QN_JSON_ARRAY * qn_json_array_ptr;
 
-typedef qn_bool qn_json_boolean;
-typedef qn_string qn_json_string;
 typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
 
@@ -58,10 +56,10 @@ typedef union _QN_JSON_VARIANT
 {
     qn_json_object_ptr object;
     qn_json_array_ptr array;
-    qn_json_string string;
+    qn_string string;
     qn_json_integer integer;
     qn_json_number number;
-    qn_json_boolean boolean;
+    qn_bool boolean;
 } qn_json_variant_un, *qn_json_variant_ptr;
 
 typedef enum _QN_JSON_TYPE {
