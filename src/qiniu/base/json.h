@@ -108,6 +108,10 @@ QN_SDK extern void qn_json_obj_unset(qn_json_object_ptr restrict obj, const char
 
 QN_SDK extern qn_bool qn_json_obj_rename(qn_json_object_ptr restrict obj, const char * restrict old_key, const char * new_key);
 
+/* == Check methods == */
+
+QN_SDK extern qn_json_type qn_json_obj_get_type(qn_json_object_ptr restrict obj, const char * restrict key);
+
 /* ==== Declaration of JSON Array ==== */
 
 /* == Constructor & Destructor methods == */
@@ -159,6 +163,10 @@ QN_SDK extern qn_bool qn_json_arr_replace_integer(qn_json_array_ptr restrict arr
 QN_SDK extern qn_bool qn_json_arr_replace_number(qn_json_array_ptr restrict arr, qn_uint16 n, qn_json_number val);
 QN_SDK extern qn_bool qn_json_arr_replace_boolean(qn_json_array_ptr restrict arr, qn_uint16 n, qn_bool val);
 QN_SDK extern qn_bool qn_json_arr_replace_null(qn_json_array_ptr restrict arr, qn_uint16 n);
+
+/* == Check methods == */
+
+QN_SDK extern qn_json_type qn_json_arr_get_type(qn_json_array_ptr restrict arr, qn_uint16 n);
 
 /* == Wapper functions == */
 
@@ -216,6 +224,36 @@ static inline qn_json_array_ptr qn_json_obj_set_new_empty_array(qn_json_object_p
         return NULL;
     }
     return new_arr;
+}
+
+static inline qn_bool qn_json_obj_is_object(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    return (qn_json_obj_get_type(obj, key) == QN_JSON_OBJECT);
+}
+
+static inline qn_bool qn_json_obj_is_array(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    return (qn_json_obj_get_type(obj, key) == QN_JSON_ARRAY);
+}
+
+static inline qn_bool qn_json_obj_is_string(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    return (qn_json_obj_get_type(obj, key) == QN_JSON_STRING);
+}
+
+static inline qn_bool qn_json_obj_is_integer(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    return (qn_json_obj_get_type(obj, key) == QN_JSON_INTEGER);
+}
+
+static inline qn_bool qn_json_obj_is_number(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    return (qn_json_obj_get_type(obj, key) == QN_JSON_NUMBER);
+}
+
+static inline qn_bool qn_json_obj_is_null(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    return (qn_json_obj_get_type(obj, key) == QN_JSON_NULL);
 }
 
 /* ==== */
@@ -332,6 +370,36 @@ static inline qn_bool qn_json_arr_replace_text(qn_json_array_ptr restrict arr, q
         return qn_true;
     }
     return qn_false;
+}
+
+static inline qn_bool qn_json_arr_is_object(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    return (qn_json_arr_get_type(arr, n) == QN_JSON_OBJECT);
+}
+
+static inline qn_bool qn_json_arr_is_array(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    return (qn_json_arr_get_type(arr, n) == QN_JSON_ARRAY);
+}
+
+static inline qn_bool qn_json_arr_is_string(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    return (qn_json_arr_get_type(arr, n) == QN_JSON_STRING);
+}
+
+static inline qn_bool qn_json_arr_is_integer(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    return (qn_json_arr_get_type(arr, n) == QN_JSON_INTEGER);
+}
+
+static inline qn_bool qn_json_arr_is_number(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    return (qn_json_arr_get_type(arr, n) == QN_JSON_NUMBER);
+}
+
+static inline qn_bool qn_json_arr_is_null(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    return (qn_json_arr_get_type(arr, n) == QN_JSON_NULL);
 }
 
 /***************************************************************************//**

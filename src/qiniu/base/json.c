@@ -500,6 +500,30 @@ QN_SDK qn_bool qn_json_obj_rename(qn_json_object_ptr restrict obj, const char * 
     return qn_true;
 }
 
+/* == Check methods == */
+
+QN_SDK qn_json_type qn_json_obj_get_type(qn_json_object_ptr restrict obj, const char * restrict key)
+{
+    int existence = 0;
+    qn_uint32 pos = 0;
+
+    assert(obj);
+    assert(key);
+
+    if (obj->cnt == 0) {
+        qn_err_set_no_such_entry();
+        return QN_JSON_UNKNOWN;
+    }
+
+    pos = qn_json_bsearch_key(qn_json_obj_key_offset(obj->data, obj->cap), obj->cnt, key, &existence);
+    if (existence != 0) {
+        qn_err_set_no_such_entry();
+        return QN_JSON_UNKNOWN;
+    }
+
+    return (qn_json_obj_attribute_offset(obj->data, obj->cap))[pos].type;
+}
+
 /* ==== Definition of array of JSON ==== */
 
 #define QN_JSON_ARR_DEFAULT_CAPACITY 8
@@ -1002,6 +1026,24 @@ QN_SDK qn_bool qn_json_arr_replace_null(qn_json_array_ptr restrict arr, qn_uint1
     qn_json_variant_un new_var;
     new_var.integer = 0;
     return qn_json_arr_replace_variant(arr, n, QN_JSON_NULL, new_var);
+}
+
+/* == Check methods == */
+
+QN_SDK qn_json_type qn_json_arr_get_type(qn_json_array_ptr restrict arr, qn_uint16 n)
+{
+    assert(arr);
+
+    if (arr->cnt == 0 || arr->cnt <= n) {
+        qn_err_json_set_out_of_index();
+        return QN_JSON_UNKNOWN;
+    }
+    if ((qn_uint)arr->cnt + n > 0xFFFF) {
+        qn_err_json_set_out_of_index();
+        return QN_JSON_UNKNOWN;
+    }
+
+    return (qn_json_arr_attribute_offset(arr->data, arr->cap))[arr->begin + n].type;
 }
 
 // ---- Inplementation of iterator of JSON ----
