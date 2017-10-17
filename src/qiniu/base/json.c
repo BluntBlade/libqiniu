@@ -1500,6 +1500,17 @@ QN_SDK qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_stri
     return qn_true;
 }
 
+QN_SDK qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr)
+{
+    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt]; 
+    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt]; 
+
+    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt] == QN_JSON_OBJECT) {
+        return (qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type;
+    }
+    return (qn_json_arr_attribute_offset(var.array->data, var.array->cap))[pos].type;
+}
+
 #ifdef __cplusplus
 }
 #endif
