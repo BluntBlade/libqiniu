@@ -702,6 +702,53 @@ CU_TestInfo test_normal_cases_of_json_manipulating[] = {
     CU_TEST_INFO_NULL
 };
 
+/* ==== Normal test cases for iterating ==== */
+
+void test_iterating_empty_object(void)
+{
+    qn_json_iterator2_ptr itr = NULL;
+    qn_json_object_ptr obj = NULL;
+
+    if (! (obj = qn_json_obj_create())) CU_FAIL_FATAL("Cannot create the object to iterate");
+
+    CU_ASSERT_PTR_NOT_NULL((itr = qn_json_itr2_create())); 
+
+    CU_ASSERT_TRUE(qn_json_itr2_push_object(itr, obj)); 
+    CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+    CU_ASSERT_EQUAL(qn_json_itr2_get_type(itr), QN_JSON_UNKNOWN);
+
+    qn_json_itr2_destroy(itr);
+    qn_json_obj_destroy(obj);
+}
+
+void test_iterating_empty_array(void)
+{
+    qn_json_iterator2_ptr itr = NULL;
+    qn_json_array_ptr arr = NULL;
+
+    if (! (arr = qn_json_arr_create())) CU_FAIL_FATAL("Cannot create the array to iterate");
+
+    CU_ASSERT_PTR_NOT_NULL((itr = qn_json_itr2_create())); 
+    CU_ASSERT_TRUE(qn_json_itr2_push_array(itr, arr)); 
+    CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+    CU_ASSERT_EQUAL(qn_json_itr2_get_type(itr), QN_JSON_UNKNOWN);
+
+    qn_json_itr2_destroy(itr);
+    qn_json_arr_destroy(arr);
+}
+
+CU_TestInfo test_normal_cases_of_json_iterating[] = {
+    {"test_iterating_empty_object()", test_iterating_empty_object},
+    //{"test_iterating_object_with_one_element()", test_iterating_object_with_one_element},
+    //{"test_iterating_object_with_two_elements()", test_iterating_object_with_two_elements},
+    //{"test_iterating_object_with_all_type_elements()", test_iterating_object_with_all_type_elements},
+    {"test_iterating_empty_array()", test_iterating_empty_array},
+    //{"test_iterating_array_with_one_element()", test_iterating_array_with_one_element},
+    //{"test_iterating_array_with_two_elements()", test_iterating_array_with_two_elements},
+    //{"test_iterating_array_with_all_type_elements()", test_iterating_array_with_all_type_elements},
+    CU_TEST_INFO_NULL
+};
+
 // ---- normal test case of parsing ----
 
 void test_parse_empty_object(void)
@@ -2313,6 +2360,7 @@ CU_TestInfo test_abnormal_cases_of_json_formatting[] = {
 
 CU_SuiteInfo suites[] = {
     {"test_normal_cases_of_json_manipulating", NULL, NULL, test_normal_cases_of_json_manipulating},
+    {"test_normal_cases_of_json_iterating", NULL, NULL, test_normal_cases_of_json_iterating},
     {"test_normal_cases_of_json_parsing", NULL, NULL, test_normal_cases_of_json_parsing},
     {"test_abnormal_cases_of_json_parsing", NULL, NULL, test_abnormal_cases_of_json_parsing},
     {"test_normal_cases_of_json_formatting", NULL, NULL, test_normal_cases_of_json_formatting},

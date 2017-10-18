@@ -1309,14 +1309,14 @@ QN_SDK qn_json_iterator2_ptr qn_json_itr2_create(void)
     }
 
     new_itr->cap = QN_JSON_ITR_DEFAULT_CAPACITY;
-    new_itr->data = new_itr + sizeof(qn_json_iterator2_st);
+    new_itr->data = (char *)new_itr + sizeof(qn_json_iterator2_st);
     return new_itr;
 }
 
 QN_SDK void qn_json_itr2_destroy(qn_json_iterator2_ptr restrict itr)
 {
     if (itr) {
-        if (itr->data != (itr + sizeof(qn_json_iterator2_st))) free(itr->data);
+        if (itr->data != ((char *)itr + sizeof(qn_json_iterator2_st))) free(itr->data);
         free(itr);
     }
 }
@@ -1334,7 +1334,7 @@ static inline qn_bool qn_json_itr2_augment(qn_json_iterator2_ptr restrict itr)
     memcpy(qn_json_itr2_position_offset(new_data, new_cap), qn_json_itr2_position_offset(itr->data, itr->cap), sizeof(qn_uint16) * itr->cnt);
     memcpy(qn_json_itr2_type_offset(new_data, new_cap), qn_json_itr2_type_offset(itr->data, itr->cap), sizeof(qn_json_itr2_type) * itr->cnt);
 
-    if (itr->data != (itr + sizeof(qn_json_iterator2_st))) free(itr->data);
+    if (itr->data != ((char *)itr + sizeof(qn_json_iterator2_st))) free(itr->data);
     itr->data = new_data;
     itr->cap = new_cap;
     return qn_true;
@@ -1381,10 +1381,11 @@ QN_SDK void qn_json_itr2_pop_all(qn_json_iterator2_ptr restrict itr)
 QN_SDK qn_bool qn_json_itr2_has_next_entry(qn_json_iterator2_ptr restrict itr)
 {
     assert(itr);
-    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt] == QN_JSON_OBJECT) {
-        return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt] < qn_json_obj_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt].object);
+    if (itr->cnt == 0) return qn_false;
+    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt - 1] == QN_JSON_OBJECT) {
+        return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_obj_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1].object);
     }
-    return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt] < qn_json_arr_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt].array);
+    return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_arr_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1].array);
 }
 
 QN_SDK void qn_json_itr2_advance(qn_json_iterator2_ptr restrict itr)
@@ -1395,10 +1396,10 @@ QN_SDK void qn_json_itr2_advance(qn_json_iterator2_ptr restrict itr)
 
 static inline qn_bool qn_json_itr2_get_variant(qn_json_iterator2_ptr restrict itr, qn_json_type type, qn_json_variant_ptr restrict jvar, qn_string * restrict key)
 {
-    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt]; 
-    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt]; 
+    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
 
-    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt] == QN_JSON_OBJECT) {
+    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt - 1] == QN_JSON_OBJECT) {
         if ((qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type != type) {
             qn_err_json_set_not_this_type();
             return qn_false;
@@ -1502,10 +1503,10 @@ QN_SDK qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_stri
 
 QN_SDK qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr)
 {
-    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt]; 
-    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt]; 
+    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
 
-    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt] == QN_JSON_OBJECT) {
+    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt - 1] == QN_JSON_OBJECT) {
         return (qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type;
     }
     return (qn_json_arr_attribute_offset(var.array->data, var.array->cap))[pos].type;
