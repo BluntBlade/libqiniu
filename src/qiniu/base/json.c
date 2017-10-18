@@ -1391,7 +1391,7 @@ QN_SDK qn_bool qn_json_itr2_has_next_entry(qn_json_iterator2_ptr restrict itr)
 QN_SDK void qn_json_itr2_advance(qn_json_iterator2_ptr restrict itr)
 {
     assert(itr);
-    itr->cnt += 1;
+    (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] += 1;
 }
 
 static inline qn_bool qn_json_itr2_get_variant(qn_json_iterator2_ptr restrict itr, qn_json_type type, qn_json_variant_ptr restrict jvar, qn_string * restrict key)
@@ -1499,6 +1499,17 @@ QN_SDK qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_stri
 
     if (! qn_json_itr2_get_variant(itr, QN_JSON_NULL, &var, key)) return qn_false;
     return qn_true;
+}
+
+QN_SDK void qn_json_itr2_reclaim_key(qn_json_iterator2_ptr restrict itr, qn_string restrict key)
+{
+    assert(itr);
+#if defined(QN_CFG_SUPPORT_MULTITHREAD)
+    assert(key);
+    qn_str_destroy(key);
+#else
+    return;
+#endif
 }
 
 QN_SDK qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr)
