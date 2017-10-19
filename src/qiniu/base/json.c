@@ -1415,11 +1415,11 @@ static inline qn_bool qn_json_itr2_get_variant(qn_json_iterator2_ptr restrict it
 #endif
         }
     } else {
-        if ((qn_json_arr_attribute_offset(var.array->data, var.array->cap))[pos].type != type) {
+        if ((qn_json_arr_attribute_offset(var.array->data, var.array->cap))[var.array->begin + pos].type != type) {
             qn_err_json_set_not_this_type();
             return qn_false;
         }
-        *jvar = (qn_json_arr_variant_offset(var.array->data, var.array->cap))[pos];
+        *jvar = (qn_json_arr_variant_offset(var.array->data, var.array->cap))[var.array->begin + pos];
 
         if (key) *key = NULL;
     } /* if */
@@ -1491,6 +1491,18 @@ QN_SDK qn_bool qn_json_itr2_get_number(qn_json_iterator2_ptr restrict itr, qn_st
     return qn_true;
 }
 
+QN_SDK qn_bool qn_json_itr2_get_boolean(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_bool * restrict val)
+{
+    qn_json_variant_un var;
+
+    assert(itr);
+    assert(val);
+
+    if (! qn_json_itr2_get_variant(itr, QN_JSON_BOOLEAN, &var, key)) return qn_false;
+    *val = var.boolean;
+    return qn_true;
+}
+
 QN_SDK qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_string * restrict key)
 {
     qn_json_variant_un var;
@@ -1501,12 +1513,11 @@ QN_SDK qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_stri
     return qn_true;
 }
 
-QN_SDK void qn_json_itr2_reclaim_key(qn_json_iterator2_ptr restrict itr, qn_string restrict key)
+QN_SDK void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict itr, qn_string restrict key)
 {
     assert(itr);
 #if defined(QN_CFG_SUPPORT_MULTITHREAD)
-    assert(key);
-    qn_str_destroy(key);
+    if (key) qn_str_destroy(key);
 #else
     return;
 #endif

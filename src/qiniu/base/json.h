@@ -465,9 +465,10 @@ QN_SDK extern qn_bool qn_json_itr2_get_array(qn_json_iterator2_ptr restrict itr,
 QN_SDK extern qn_bool qn_json_itr2_get_string(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_string * restrict val);
 QN_SDK extern qn_bool qn_json_itr2_get_integer(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_integer * restrict val);
 QN_SDK extern qn_bool qn_json_itr2_get_number(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_number * restrict val);
+QN_SDK extern qn_bool qn_json_itr2_get_boolean(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_bool * restrict val);
 QN_SDK extern qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_string * restrict key);
 
-QN_SDK extern void qn_json_itr2_reclaim_key(qn_json_iterator2_ptr restrict itr, qn_string restrict key);
+QN_SDK extern void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict itr, qn_string restrict key);
 
 QN_SDK extern qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr);
 
