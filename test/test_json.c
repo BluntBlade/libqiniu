@@ -972,6 +972,153 @@ void test_iterating_array_with_all_type_elements(void)
     qn_json_arr_destroy(arr);
 }
 
+void test_iterating_five_levels(void)
+{
+    qn_json_object_ptr obj2 = NULL;
+    qn_json_array_ptr arr3 = NULL;
+    qn_json_array_ptr arr4 = NULL;
+    qn_json_object_ptr obj5 = NULL;
+    qn_json_object_ptr obj_val = NULL;
+    qn_json_array_ptr arr_val = NULL;
+    qn_integer int_val = 0;
+    qn_string key = NULL;
+    qn_json_iterator2_ptr itr = NULL;
+    qn_json_object_ptr obj = NULL;
+
+    /* ==== Prepare iterating target ==== */
+    if (! (obj = qn_json_obj_create())) CU_FAIL_FATAL("Cannot create the object for iterating");
+    if (! (itr = qn_json_itr2_create())) CU_FAIL_FATAL("Cannot create the iterator itself");
+
+    if (! (obj2 = qn_json_obj_set_new_empty_object(obj, "_obj2"))) CU_FAIL_FATAL("Cannot set the object element in the second level");
+    if (! qn_json_obj_set_integer(obj2, "_int", 2)) CU_FAIL_FATAL("Cannot set the integer element of the object in the second level");
+
+    if (! (arr3 = qn_json_obj_set_new_empty_array(obj2, "_arr3"))) CU_FAIL_FATAL("Cannot set the array in the third level");
+    if (! qn_json_arr_push_integer(arr3, 3)) CU_FAIL_FATAL("Cannot push the integer element of the array in the third level");
+
+    if (! (arr4 = qn_json_arr_push_new_empty_array(arr3))) CU_FAIL_FATAL("Cannot push the array in the fourth level");
+    if (! qn_json_arr_unshift_integer(arr4, 4)) CU_FAIL_FATAL("Cannot unshift the integer element of the array in the fourth level");
+
+    if (! (obj5 = qn_json_arr_unshift_new_empty_object(arr4))) CU_FAIL_FATAL("Cannot unshift the object in the fifth level");
+    if (! qn_json_obj_set_integer(obj5, "_int", 5)) CU_FAIL_FATAL("Cannot set the integer element of the object in the fifth level");
+
+    if (! qn_json_itr2_push_object(itr, obj)) CU_FAIL_FATAL("Cannot push the object element in the first level");
+
+    /* ==== Test iterating ==== */
+    /* == First level == */
+    CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+
+    obj_val = NULL;
+    key = NULL;
+    CU_ASSERT_TRUE(qn_json_itr2_get_object(itr, &key, &obj_val));
+    CU_ASSERT_EQUAL(qn_json_obj_size(obj_val), 2);
+    CU_ASSERT_PTR_NOT_NULL(key);
+    CU_ASSERT_EQUAL(qn_str_compare_raw(key, "_obj2"), 0);
+    qn_json_itr2_reclaim_string(itr, key);
+
+    CU_ASSERT_TRUE(qn_json_itr2_push_object(itr, obj2));
+    {
+        /* == Second level == */
+        CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+        
+        arr_val = NULL;
+        key = NULL;
+        CU_ASSERT_TRUE(qn_json_itr2_get_array(itr, &key, &arr_val));
+        CU_ASSERT_EQUAL(qn_json_arr_size(arr_val), 2);
+        CU_ASSERT_PTR_NOT_NULL(key);
+        CU_ASSERT_EQUAL(qn_str_compare_raw(key, "_arr3"), 0);
+        qn_json_itr2_reclaim_string(itr, key);
+
+        CU_ASSERT_TRUE(qn_json_itr2_push_array(itr, arr_val));
+        {
+            /* == Third level == */
+            CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+            
+            int_val = 0;
+            key = NULL;
+            CU_ASSERT_TRUE(qn_json_itr2_get_integer(itr, &key, &int_val));
+            CU_ASSERT_EQUAL(int_val, 3);
+            CU_ASSERT_PTR_NULL(key);
+
+            qn_json_itr2_advance(itr);
+            CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+            
+            arr_val = NULL;
+            key = NULL;
+            CU_ASSERT_TRUE(qn_json_itr2_get_array(itr, &key, &arr_val));
+            CU_ASSERT_EQUAL(qn_json_arr_size(arr_val), 2);
+            CU_ASSERT_PTR_NULL(key);
+
+            CU_ASSERT_TRUE(qn_json_itr2_push_array(itr, arr_val));
+            {
+                /* == Fourth level == */
+                CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+                
+                obj_val = NULL;
+                key = NULL;
+                CU_ASSERT_TRUE(qn_json_itr2_get_object(itr, &key, &obj_val));
+                CU_ASSERT_EQUAL(qn_json_obj_size(obj_val), 1);
+                CU_ASSERT_PTR_NULL(key);
+
+                qn_json_itr2_advance(itr);
+                CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+
+                CU_ASSERT_TRUE(qn_json_itr2_push_object(itr, obj_val));
+                {
+                    /* == Fifth level == */
+                    CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+
+                    int_val = 0;
+                    key = NULL;
+                    CU_ASSERT_TRUE(qn_json_itr2_get_integer(itr, &key, &int_val));
+                    CU_ASSERT_EQUAL(int_val, 5);
+                    CU_ASSERT_PTR_NOT_NULL(key);
+                    CU_ASSERT_EQUAL(qn_str_compare_raw(key, "_int"), 0);
+                    qn_json_itr2_reclaim_string(itr, key);
+
+                    qn_json_itr2_advance(itr);
+                    CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+                }
+                qn_json_itr2_pop(itr);
+
+                int_val = 0;
+                key = NULL;
+                CU_ASSERT_TRUE(qn_json_itr2_get_integer(itr, &key, &int_val));
+                CU_ASSERT_EQUAL(int_val, 4);
+                CU_ASSERT_PTR_NULL(key);
+
+                qn_json_itr2_advance(itr);
+                CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+            }
+            qn_json_itr2_pop(itr);
+
+            qn_json_itr2_advance(itr);
+            CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+        }
+        qn_json_itr2_pop(itr);
+
+        qn_json_itr2_advance(itr);
+        CU_ASSERT_TRUE(qn_json_itr2_has_next_entry(itr));
+
+        int_val = 0;
+        key = NULL;
+        CU_ASSERT_TRUE(qn_json_itr2_get_integer(itr, &key, &int_val));
+        CU_ASSERT_EQUAL(int_val, 2);
+        CU_ASSERT_PTR_NOT_NULL(key);
+        CU_ASSERT_EQUAL(qn_str_compare_raw(key, "_int"), 0);
+        qn_json_itr2_reclaim_string(itr, key);
+
+        qn_json_itr2_advance(itr);
+        CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+    }
+    qn_json_itr2_pop(itr);
+
+    qn_json_itr2_advance(itr);
+    CU_ASSERT_FALSE(qn_json_itr2_has_next_entry(itr));
+
+    qn_json_itr2_destroy(itr);
+    qn_json_obj_destroy(obj);
+}
+
 CU_TestInfo test_normal_cases_of_json_iterating[] = {
     {"test_iterating_empty_object()", test_iterating_empty_object},
     {"test_iterating_object_with_one_element()", test_iterating_object_with_one_element},
@@ -979,6 +1126,7 @@ CU_TestInfo test_normal_cases_of_json_iterating[] = {
     {"test_iterating_empty_array()", test_iterating_empty_array},
     {"test_iterating_array_with_one_element()", test_iterating_array_with_one_element},
     {"test_iterating_array_with_all_type_elements()", test_iterating_array_with_all_type_elements},
+    {"test_iterating_five_levels()", test_iterating_five_levels},
     CU_TEST_INFO_NULL
 };
 
