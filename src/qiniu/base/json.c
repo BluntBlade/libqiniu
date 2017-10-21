@@ -1289,15 +1289,20 @@ typedef union _QN_JSON_ITR2_VARIANT
     qn_json_array_ptr array;
 } qn_json_itr2_variant_st, *qn_json_itr2_variant_ptr;
 
-typedef qn_uint8 qn_json_itr2_type;
+typedef struct _QN_JSON_ITR2_ATTRIBUTE
+{
+    qn_uint32 type:4;
+    qn_uint32 status:16;
+    qn_uint32 _padding:12;
+} qn_json_itr2_attribute_st, *qn_json_itr2_attribute_ptr;
 
 #define qn_json_itr2_variant_offset(ptr, cap) ((qn_json_itr2_variant_ptr) ptr)
 #define qn_json_itr2_position_offset(ptr, cap) ((qn_uint16 *) ((char *) ptr + sizeof(qn_json_itr2_variant_st) * cap))
-#define qn_json_itr2_type_offset(ptr, cap) ((qn_json_itr2_type *) ((char *) ptr + sizeof(qn_json_itr2_variant_st) * cap + sizeof(qn_uint16) * cap))
+#define qn_json_itr2_attribute_offset(ptr, cap) ((qn_json_itr2_attribute_ptr) ((char *) ptr + sizeof(qn_json_itr2_variant_st) * cap + sizeof(qn_uint16) * cap))
 
 static inline size_t qn_json_itr2_calculate_data_size(qn_uint16 cap)
 {
-    return (sizeof(qn_json_itr2_variant_st) + sizeof(qn_uint16) + sizeof(qn_json_itr2_type)) * cap;
+    return (sizeof(qn_json_itr2_variant_st) + sizeof(qn_uint16) + sizeof(qn_json_itr2_attribute_st)) * cap;
 }
 
 QN_SDK qn_json_iterator2_ptr qn_json_itr2_create(void)
@@ -1332,7 +1337,7 @@ static inline qn_bool qn_json_itr2_augment(qn_json_iterator2_ptr restrict itr)
 
     memcpy(qn_json_itr2_variant_offset(new_data, new_cap), qn_json_itr2_variant_offset(itr->data, itr->cap), sizeof(qn_json_itr2_variant_st) * itr->cnt);
     memcpy(qn_json_itr2_position_offset(new_data, new_cap), qn_json_itr2_position_offset(itr->data, itr->cap), sizeof(qn_uint16) * itr->cnt);
-    memcpy(qn_json_itr2_type_offset(new_data, new_cap), qn_json_itr2_type_offset(itr->data, itr->cap), sizeof(qn_json_itr2_type) * itr->cnt);
+    memcpy(qn_json_itr2_attribute_offset(new_data, new_cap), qn_json_itr2_attribute_offset(itr->data, itr->cap), sizeof(qn_json_itr2_attribute_st) * itr->cnt);
 
     if (itr->data != ((char *)itr + sizeof(qn_json_iterator2_st))) free(itr->data);
     itr->data = new_data;
@@ -1340,7 +1345,7 @@ static inline qn_bool qn_json_itr2_augment(qn_json_iterator2_ptr restrict itr)
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj)
+QN_SDK qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
 {
     assert(itr);
     assert(obj);
@@ -1348,12 +1353,13 @@ QN_SDK qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_j
     if (itr->cnt == itr->cap && ! qn_json_itr2_augment(itr)) return qn_false;
     (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt].object = obj;
     (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt] = 0;
-    (qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt] = QN_JSON_OBJECT;
+    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].type = QN_JSON_OBJECT;
+    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].status = status;
     itr->cnt += 1;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr)
+QN_SDK qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status)
 {
     assert(itr);
     assert(arr);
@@ -1361,7 +1367,8 @@ QN_SDK qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_js
     if (itr->cnt == itr->cap && ! qn_json_itr2_augment(itr)) return qn_false;
     (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt].array = arr;
     (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt] = 0;
-    (qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt] = QN_JSON_ARRAY;
+    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].type = QN_JSON_ARRAY;
+    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].status = status;
     itr->cnt += 1;
     return qn_true;
 }
@@ -1382,7 +1389,7 @@ QN_SDK qn_bool qn_json_itr2_has_next_entry(qn_json_iterator2_ptr restrict itr)
 {
     assert(itr);
     if (itr->cnt == 0) return qn_false;
-    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt - 1] == QN_JSON_OBJECT) {
+    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
         return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_obj_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1].object);
     }
     return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_arr_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1].array);
@@ -1399,7 +1406,7 @@ static inline qn_bool qn_json_itr2_get_variant(qn_json_iterator2_ptr restrict it
     qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
     qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
 
-    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt - 1] == QN_JSON_OBJECT) {
+    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
         if ((qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type != type) {
             qn_err_json_set_not_this_type();
             return qn_false;
@@ -1525,14 +1532,56 @@ QN_SDK void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict itr, qn_s
 
 QN_SDK qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr)
 {
-    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
-    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
+    qn_json_itr2_variant_st var;
+    qn_uint16 pos = 0;
 
-    if ((qn_json_itr2_type_offset(itr->data, itr->cap))[itr->cnt - 1] == QN_JSON_OBJECT) {
+    assert(itr);
+
+    var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
+
+    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
         return (qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type;
     }
     return (qn_json_arr_attribute_offset(var.array->data, var.array->cap))[pos].type;
 }
+
+QN_SDK qn_json_object_ptr qn_json_itr2_top_object(qn_json_iterator2_ptr restrict itr)
+{
+    qn_json_itr2_variant_st var;
+
+    assert(itr);
+
+    var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type != QN_JSON_OBJECT) return NULL;
+    return var.object;
+}
+
+QN_SDK qn_json_array_ptr qn_json_itr2_top_array(qn_json_iterator2_ptr restrict itr)
+{
+    qn_json_itr2_variant_st var;
+
+    assert(itr);
+
+    var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type != QN_JSON_ARRAY) return NULL;
+    return var.array;
+}
+
+QN_SDK void qn_json_itr2_set_top_status(qn_json_iterator2_ptr restrict itr, qn_uint16 status)
+{
+    assert(itr);
+    if (itr->cnt == 0) return;
+    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status = status;
+}
+
+QN_SDK qn_uint16 qn_json_itr2_get_top_status(qn_json_iterator2_ptr restrict itr)
+{
+    assert(itr);
+    if (itr->cnt == 0) return 0;
+    return (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status;
+}
+
 
 #ifdef __cplusplus
 }

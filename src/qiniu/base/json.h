@@ -452,8 +452,8 @@ typedef struct _QN_JSON_ITERATOR2 * qn_json_iterator2_ptr;
 QN_SDK extern qn_json_iterator2_ptr qn_json_itr2_create(void);
 QN_SDK extern void qn_json_itr2_destroy(qn_json_iterator2_ptr restrict itr);
 
-QN_SDK extern qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj);
-QN_SDK extern qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr);
+QN_SDK extern qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status);
+QN_SDK extern qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status);
 QN_SDK extern void qn_json_itr2_pop(qn_json_iterator2_ptr restrict itr);
 QN_SDK extern void qn_json_itr2_pop_all(qn_json_iterator2_ptr restrict itr);
 
@@ -472,16 +472,22 @@ QN_SDK extern void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict it
 
 QN_SDK extern qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr);
 
-static inline qn_bool qn_json_itr2_start_with_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj)
+QN_SDK extern qn_json_object_ptr qn_json_itr2_get_top_object(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern qn_json_array_ptr qn_json_itr2_get_top_array(qn_json_iterator2_ptr restrict itr);
+
+QN_SDK extern void qn_json_itr2_set_top_status(qn_json_iterator2_ptr restrict itr, qn_uint16 status);
+QN_SDK extern qn_uint16 qn_json_itr2_get_top_status(qn_json_iterator2_ptr restrict itr);
+
+static inline qn_bool qn_json_itr2_start_with_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
 {
     qn_json_itr2_pop_all(itr);
-    return qn_json_itr2_push_object(itr, obj);
+    return qn_json_itr2_push_object(itr, obj, status);
 }
 
-static inline qn_bool qn_json_itr2_start_with_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr)
+static inline qn_bool qn_json_itr2_start_with_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status)
 {
     qn_json_itr2_pop_all(itr);
-    return qn_json_itr2_push_array(itr, arr);
+    return qn_json_itr2_push_array(itr, arr, status);
 }
 
 static inline qn_bool qn_json_itr2_is_object(qn_json_iterator2_ptr restrict itr)
