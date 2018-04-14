@@ -1543,7 +1543,7 @@ QN_SDK qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr)
     if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
         return (qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type;
     }
-    return (qn_json_arr_attribute_offset(var.array->data, var.array->cap))[pos].type;
+    return (qn_json_arr_attribute_offset(var.array->data, var.array->cap))[var.array->begin + pos].type;
 }
 
 QN_SDK qn_json_object_ptr qn_json_itr2_top_object(qn_json_iterator2_ptr restrict itr)
@@ -1582,6 +1582,11 @@ QN_SDK qn_uint16 qn_json_itr2_get_top_status(qn_json_iterator2_ptr restrict itr)
     return (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status;
 }
 
+QN_SDK qn_bool qn_json_itr2_is_empty(qn_json_iterator2_ptr restrict itr)
+{
+    assert(itr);
+    return (itr->cnt == 0);
+}
 
 #ifdef __cplusplus
 }

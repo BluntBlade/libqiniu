@@ -478,6 +478,8 @@ QN_SDK extern qn_json_array_ptr qn_json_itr2_get_top_array(qn_json_iterator2_ptr
 QN_SDK extern void qn_json_itr2_set_top_status(qn_json_iterator2_ptr restrict itr, qn_uint16 status);
 QN_SDK extern qn_uint16 qn_json_itr2_get_top_status(qn_json_iterator2_ptr restrict itr);
 
+QN_SDK extern qn_bool qn_json_itr2_is_empty(qn_json_iterator2_ptr restrict itr);
+
 static inline qn_bool qn_json_itr2_start_with_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
 {
     qn_json_itr2_pop_all(itr);
