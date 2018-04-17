@@ -412,40 +412,6 @@ static inline qn_bool qn_json_arr_is_null(qn_json_array_ptr restrict arr, qn_uin
 * like the JSON formatter and parser provided by this SDK.
 *******************************************************************************/
 
-struct _QN_JSON_ITERATOR;
-typedef struct _QN_JSON_ITERATOR * qn_json_iterator_ptr;
-
-QN_SDK extern qn_json_iterator_ptr qn_json_itr_create(void);
-QN_SDK extern void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr);
-QN_SDK extern void qn_json_itr_reset(qn_json_iterator_ptr restrict itr);
-QN_SDK extern void qn_json_itr_rewind(qn_json_iterator_ptr restrict itr);
-
-QN_SDK extern qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr);
-QN_SDK extern int qn_json_itr_done_steps(qn_json_iterator_ptr restrict itr);
-
-QN_SDK extern qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr);
-
-QN_SDK extern void qn_json_itr_set_status(qn_json_iterator_ptr restrict itr, qn_uint32 sts);
-QN_SDK extern qn_uint32 qn_json_itr_get_status(qn_json_iterator_ptr restrict itr);
-
-QN_SDK extern qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr restrict obj);
-QN_SDK extern qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr restrict arr);
-QN_SDK extern void qn_json_itr_pop(qn_json_iterator_ptr restrict itr);
-
-QN_SDK extern qn_json_object_ptr qn_json_itr_top_object(qn_json_iterator_ptr restrict itr);
-QN_SDK extern qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr);
-
-enum
-{
-    QN_JSON_ITR_OK = 0,
-    QN_JSON_ITR_NO_MORE = 1
-};
-
-typedef int (*qn_json_itr_callback_fn)(void * data, qn_json_type cls, qn_json_variant_ptr restrict val);
-QN_SDK extern int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback_fn cb);
-
-/* == Redesign == */
-
 struct _QN_JSON_ITERATOR2;
 typedef struct _QN_JSON_ITERATOR2 * qn_json_iterator2_ptr;
 
