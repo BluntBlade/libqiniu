@@ -1048,7 +1048,7 @@ QN_SDK qn_json_type qn_json_arr_get_type(qn_json_array_ptr restrict arr, qn_uint
 
 #define QN_JSON_ITR_DEFAULT_CAPACITY (4)
 
-typedef struct _QN_JSON_ITERATOR2
+typedef struct _QN_JSON_ITERATOR
 {
     qn_uint16 cnt;
     qn_uint16 cap;
@@ -1059,27 +1059,27 @@ typedef union _QN_JSON_ITR2_VARIANT
 {
     qn_json_object_ptr object;
     qn_json_array_ptr array;
-} qn_json_itr2_variant_st, *qn_json_itr2_variant_ptr;
+} qn_json_itr_variant_st, *qn_json_itr_variant_ptr;
 
 typedef struct _QN_JSON_ITR2_ATTRIBUTE
 {
     qn_uint32 type:4;
     qn_uint32 status:16;
     qn_uint32 _padding:12;
-} qn_json_itr2_attribute_st, *qn_json_itr2_attribute_ptr;
+} qn_json_itr_attribute_st, *qn_json_itr_attribute_ptr;
 
-#define qn_json_itr2_variant_offset(ptr, cap) ((qn_json_itr2_variant_ptr) ptr)
-#define qn_json_itr2_position_offset(ptr, cap) ((qn_uint16 *) ((char *) ptr + sizeof(qn_json_itr2_variant_st) * cap))
-#define qn_json_itr2_attribute_offset(ptr, cap) ((qn_json_itr2_attribute_ptr) ((char *) ptr + sizeof(qn_json_itr2_variant_st) * cap + sizeof(qn_uint16) * cap))
+#define qn_json_itr_variant_offset(ptr, cap) ((qn_json_itr_variant_ptr) ptr)
+#define qn_json_itr_position_offset(ptr, cap) ((qn_uint16 *) ((char *) ptr + sizeof(qn_json_itr_variant_st) * cap))
+#define qn_json_itr_attribute_offset(ptr, cap) ((qn_json_itr_attribute_ptr) ((char *) ptr + sizeof(qn_json_itr_variant_st) * cap + sizeof(qn_uint16) * cap))
 
-static inline size_t qn_json_itr2_calculate_data_size(qn_uint16 cap)
+static inline size_t qn_json_itr_calculate_data_size(qn_uint16 cap)
 {
-    return (sizeof(qn_json_itr2_variant_st) + sizeof(qn_uint16) + sizeof(qn_json_itr2_attribute_st)) * cap;
+    return (sizeof(qn_json_itr_variant_st) + sizeof(qn_uint16) + sizeof(qn_json_itr_attribute_st)) * cap;
 }
 
-QN_SDK qn_json_iterator2_ptr qn_json_itr2_create(void)
+QN_SDK qn_json_iterator_ptr qn_json_itr_create(void)
 {
-    qn_json_iterator2_ptr new_itr = calloc(1, sizeof(qn_json_iterator2_st) + qn_json_itr2_calculate_data_size(QN_JSON_ITR_DEFAULT_CAPACITY));
+    qn_json_iterator_ptr new_itr = calloc(1, sizeof(qn_json_iterator2_st) + qn_json_itr_calculate_data_size(QN_JSON_ITR_DEFAULT_CAPACITY));
     if (! new_itr) {
         qn_err_set_out_of_memory();
         return NULL;
@@ -1090,7 +1090,7 @@ QN_SDK qn_json_iterator2_ptr qn_json_itr2_create(void)
     return new_itr;
 }
 
-QN_SDK void qn_json_itr2_destroy(qn_json_iterator2_ptr restrict itr)
+QN_SDK void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr)
 {
     if (itr) {
         if (itr->data != ((char *)itr + sizeof(qn_json_iterator2_st))) free(itr->data);
@@ -1098,18 +1098,18 @@ QN_SDK void qn_json_itr2_destroy(qn_json_iterator2_ptr restrict itr)
     }
 }
 
-static inline qn_bool qn_json_itr2_augment(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_augment(qn_json_iterator_ptr restrict itr)
 {
     qn_uint16 new_cap = qn_json_round_to_multiple_of_8(itr->cap + (itr->cap >> 1));
-    void * new_data = calloc(1, qn_json_itr2_calculate_data_size(new_cap));
+    void * new_data = calloc(1, qn_json_itr_calculate_data_size(new_cap));
     if (! new_data) {
         qn_err_set_out_of_memory();
         return qn_false;
     }
 
-    memcpy(qn_json_itr2_variant_offset(new_data, new_cap), qn_json_itr2_variant_offset(itr->data, itr->cap), sizeof(qn_json_itr2_variant_st) * itr->cnt);
-    memcpy(qn_json_itr2_position_offset(new_data, new_cap), qn_json_itr2_position_offset(itr->data, itr->cap), sizeof(qn_uint16) * itr->cnt);
-    memcpy(qn_json_itr2_attribute_offset(new_data, new_cap), qn_json_itr2_attribute_offset(itr->data, itr->cap), sizeof(qn_json_itr2_attribute_st) * itr->cnt);
+    memcpy(qn_json_itr_variant_offset(new_data, new_cap), qn_json_itr_variant_offset(itr->data, itr->cap), sizeof(qn_json_itr_variant_st) * itr->cnt);
+    memcpy(qn_json_itr_position_offset(new_data, new_cap), qn_json_itr_position_offset(itr->data, itr->cap), sizeof(qn_uint16) * itr->cnt);
+    memcpy(qn_json_itr_attribute_offset(new_data, new_cap), qn_json_itr_attribute_offset(itr->data, itr->cap), sizeof(qn_json_itr_attribute_st) * itr->cnt);
 
     if (itr->data != ((char *)itr + sizeof(qn_json_iterator2_st))) free(itr->data);
     itr->data = new_data;
@@ -1117,68 +1117,68 @@ static inline qn_bool qn_json_itr2_augment(qn_json_iterator2_ptr restrict itr)
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
+QN_SDK qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
 {
     assert(itr);
     assert(obj);
 
-    if (itr->cnt == itr->cap && ! qn_json_itr2_augment(itr)) return qn_false;
-    (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt].object = obj;
-    (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt] = 0;
-    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].type = QN_JSON_OBJECT;
-    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].status = status;
+    if (itr->cnt == itr->cap && ! qn_json_itr_augment(itr)) return qn_false;
+    (qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt].object = obj;
+    (qn_json_itr_position_offset(itr->data, itr->cap))[itr->cnt] = 0;
+    (qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt].type = QN_JSON_OBJECT;
+    (qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt].status = status;
     itr->cnt += 1;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status)
+QN_SDK qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status)
 {
     assert(itr);
     assert(arr);
 
-    if (itr->cnt == itr->cap && ! qn_json_itr2_augment(itr)) return qn_false;
-    (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt].array = arr;
-    (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt] = 0;
-    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].type = QN_JSON_ARRAY;
-    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt].status = status;
+    if (itr->cnt == itr->cap && ! qn_json_itr_augment(itr)) return qn_false;
+    (qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt].array = arr;
+    (qn_json_itr_position_offset(itr->data, itr->cap))[itr->cnt] = 0;
+    (qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt].type = QN_JSON_ARRAY;
+    (qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt].status = status;
     itr->cnt += 1;
     return qn_true;
 }
 
-QN_SDK void qn_json_itr2_pop(qn_json_iterator2_ptr restrict itr)
+QN_SDK void qn_json_itr_pop(qn_json_iterator_ptr restrict itr)
 {
     assert(itr);
     if (itr->cnt > 0) itr->cnt -= 1;
 }
 
-QN_SDK void qn_json_itr2_pop_all(qn_json_iterator2_ptr restrict itr)
+QN_SDK void qn_json_itr_pop_all(qn_json_iterator_ptr restrict itr)
 {
     assert(itr);
     itr->cnt = 0;
 }
 
-QN_SDK qn_bool qn_json_itr2_has_next_entry(qn_json_iterator2_ptr restrict itr)
+QN_SDK qn_bool qn_json_itr_has_next_one(qn_json_iterator_ptr restrict itr)
 {
     assert(itr);
     if (itr->cnt == 0) return qn_false;
-    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
-        return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_obj_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1].object);
+    if ((qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
+        return (qn_json_itr_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_obj_size((qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt - 1].object);
     }
-    return (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_arr_size((qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1].array);
+    return (qn_json_itr_position_offset(itr->data, itr->cap))[itr->cnt - 1] < qn_json_arr_size((qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt - 1].array);
 }
 
-QN_SDK void qn_json_itr2_advance(qn_json_iterator2_ptr restrict itr)
+QN_SDK void qn_json_itr_advance(qn_json_iterator_ptr restrict itr)
 {
     assert(itr);
-    (qn_json_itr2_position_offset(itr->data, itr->cap))[itr->cnt - 1] += 1;
+    (qn_json_itr_position_offset(itr->data, itr->cap))[itr->cnt - 1] += 1;
 }
 
-static inline qn_bool qn_json_itr2_get_variant(qn_json_iterator2_ptr restrict itr, qn_json_type type, qn_json_variant_ptr restrict jvar, qn_string * restrict key)
+static inline qn_bool qn_json_itr_get_variant(qn_json_iterator_ptr restrict itr, qn_json_type type, qn_json_variant_ptr restrict jvar, qn_string * restrict key)
 {
-    qn_json_itr2_variant_st var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
-    qn_uint16 pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
+    qn_json_itr_variant_st var = (qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    qn_uint16 pos = qn_json_itr_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
 
-    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
+    if ((qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
         if ((qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type != type) {
             qn_err_json_set_not_this_type();
             return qn_false;
@@ -1205,38 +1205,38 @@ static inline qn_bool qn_json_itr2_get_variant(qn_json_iterator2_ptr restrict it
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_object(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_object_ptr * restrict val)
+QN_SDK qn_bool qn_json_itr_get_object(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_object_ptr * restrict val)
 {
     qn_json_variant_un var;
 
     assert(itr);
     assert(val);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_OBJECT, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_OBJECT, &var, key)) return qn_false;
     *val = var.object;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_array(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_array_ptr * restrict val)
+QN_SDK qn_bool qn_json_itr_get_array(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_array_ptr * restrict val)
 {
     qn_json_variant_un var;
 
     assert(itr);
     assert(val);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_ARRAY, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_ARRAY, &var, key)) return qn_false;
     *val = var.array;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_string(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_string * restrict val)
+QN_SDK qn_bool qn_json_itr_get_string(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_string * restrict val)
 {
     qn_json_variant_un var;
 
     assert(itr);
     assert(val);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_STRING, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_STRING, &var, key)) return qn_false;
 #if defined(QN_CFG_SUPPORT_MULTITHREAD)
     *val = qn_str_duplicate(var.string);
     if (! *val) return qn_false;
@@ -1246,53 +1246,53 @@ QN_SDK qn_bool qn_json_itr2_get_string(qn_json_iterator2_ptr restrict itr, qn_st
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_integer(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_integer * restrict val)
+QN_SDK qn_bool qn_json_itr_get_integer(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_integer * restrict val)
 {
     qn_json_variant_un var;
 
     assert(itr);
     assert(val);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_INTEGER, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_INTEGER, &var, key)) return qn_false;
     *val = var.integer;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_number(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_number * restrict val)
+QN_SDK qn_bool qn_json_itr_get_number(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_number * restrict val)
 {
     qn_json_variant_un var;
 
     assert(itr);
     assert(val);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_NUMBER, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_NUMBER, &var, key)) return qn_false;
     *val = var.number;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_boolean(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_bool * restrict val)
+QN_SDK qn_bool qn_json_itr_get_boolean(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_bool * restrict val)
 {
     qn_json_variant_un var;
 
     assert(itr);
     assert(val);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_BOOLEAN, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_BOOLEAN, &var, key)) return qn_false;
     *val = var.boolean;
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_string * restrict key)
+QN_SDK qn_bool qn_json_itr_get_null(qn_json_iterator_ptr restrict itr, qn_string * restrict key)
 {
     qn_json_variant_un var;
 
     assert(itr);
 
-    if (! qn_json_itr2_get_variant(itr, QN_JSON_NULL, &var, key)) return qn_false;
+    if (! qn_json_itr_get_variant(itr, QN_JSON_NULL, &var, key)) return qn_false;
     return qn_true;
 }
 
-QN_SDK void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict itr, qn_string restrict key)
+QN_SDK void qn_json_itr_reclaim_string(qn_json_iterator_ptr restrict itr, qn_string restrict key)
 {
     assert(itr);
 #if defined(QN_CFG_SUPPORT_MULTITHREAD)
@@ -1302,59 +1302,59 @@ QN_SDK void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict itr, qn_s
 #endif
 }
 
-QN_SDK qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr)
+QN_SDK qn_json_type qn_json_itr_get_type(qn_json_iterator_ptr restrict itr)
 {
-    qn_json_itr2_variant_st var;
+    qn_json_itr_variant_st var;
     qn_uint16 pos = 0;
 
     assert(itr);
 
-    var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
-    pos = qn_json_itr2_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
+    var = (qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    pos = qn_json_itr_position_offset(itr->data, itr->cap)[itr->cnt - 1]; 
 
-    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
+    if ((qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type == QN_JSON_OBJECT) {
         return (qn_json_obj_attribute_offset(var.object->data, var.object->cap))[pos].type;
     }
     return (qn_json_arr_attribute_offset(var.array->data, var.array->cap))[var.array->begin + pos].type;
 }
 
-QN_SDK qn_json_object_ptr qn_json_itr2_top_object(qn_json_iterator2_ptr restrict itr)
+QN_SDK qn_json_object_ptr qn_json_itr_top_object(qn_json_iterator_ptr restrict itr)
 {
-    qn_json_itr2_variant_st var;
+    qn_json_itr_variant_st var;
 
     assert(itr);
 
-    var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
-    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type != QN_JSON_OBJECT) return NULL;
+    var = (qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    if ((qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type != QN_JSON_OBJECT) return NULL;
     return var.object;
 }
 
-QN_SDK qn_json_array_ptr qn_json_itr2_top_array(qn_json_iterator2_ptr restrict itr)
+QN_SDK qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr)
 {
-    qn_json_itr2_variant_st var;
+    qn_json_itr_variant_st var;
 
     assert(itr);
 
-    var = (qn_json_itr2_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
-    if ((qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type != QN_JSON_ARRAY) return NULL;
+    var = (qn_json_itr_variant_offset(itr->data, itr->cap))[itr->cnt - 1]; 
+    if ((qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].type != QN_JSON_ARRAY) return NULL;
     return var.array;
 }
 
-QN_SDK void qn_json_itr2_set_top_status(qn_json_iterator2_ptr restrict itr, qn_uint16 status)
+QN_SDK void qn_json_itr_set_top_status(qn_json_iterator_ptr restrict itr, qn_uint16 status)
 {
     assert(itr);
     if (itr->cnt == 0) return;
-    (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status = status;
+    (qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status = status;
 }
 
-QN_SDK qn_uint16 qn_json_itr2_get_top_status(qn_json_iterator2_ptr restrict itr)
+QN_SDK qn_uint16 qn_json_itr_get_top_status(qn_json_iterator_ptr restrict itr)
 {
     assert(itr);
     if (itr->cnt == 0) return 0;
-    return (qn_json_itr2_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status;
+    return (qn_json_itr_attribute_offset(itr->data, itr->cap))[itr->cnt - 1].status;
 }
 
-QN_SDK qn_bool qn_json_itr2_is_empty(qn_json_iterator2_ptr restrict itr)
+QN_SDK qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr)
 {
     assert(itr);
     return (itr->cnt == 0);

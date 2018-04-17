@@ -412,80 +412,80 @@ static inline qn_bool qn_json_arr_is_null(qn_json_array_ptr restrict arr, qn_uin
 * like the JSON formatter and parser provided by this SDK.
 *******************************************************************************/
 
-struct _QN_JSON_ITERATOR2;
-typedef struct _QN_JSON_ITERATOR2 * qn_json_iterator2_ptr;
+struct _QN_JSON_ITERATOR;
+typedef struct _QN_JSON_ITERATOR * qn_json_iterator_ptr;
 
-QN_SDK extern qn_json_iterator2_ptr qn_json_itr2_create(void);
-QN_SDK extern void qn_json_itr2_destroy(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern qn_json_iterator_ptr qn_json_itr_create(void);
+QN_SDK extern void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr);
 
-QN_SDK extern qn_bool qn_json_itr2_push_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status);
-QN_SDK extern qn_bool qn_json_itr2_push_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status);
-QN_SDK extern void qn_json_itr2_pop(qn_json_iterator2_ptr restrict itr);
-QN_SDK extern void qn_json_itr2_pop_all(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status);
+QN_SDK extern qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status);
+QN_SDK extern void qn_json_itr_pop(qn_json_iterator_ptr restrict itr);
+QN_SDK extern void qn_json_itr_pop_all(qn_json_iterator_ptr restrict itr);
 
-QN_SDK extern qn_bool qn_json_itr2_has_next_entry(qn_json_iterator2_ptr restrict itr);
-QN_SDK extern void qn_json_itr2_advance(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern qn_bool qn_json_itr_has_next_one(qn_json_iterator_ptr restrict itr);
+QN_SDK extern void qn_json_itr_advance(qn_json_iterator_ptr restrict itr);
 
-QN_SDK extern qn_bool qn_json_itr2_get_object(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_object_ptr * restrict val);
-QN_SDK extern qn_bool qn_json_itr2_get_array(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_array_ptr * restrict val);
-QN_SDK extern qn_bool qn_json_itr2_get_string(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_string * restrict val);
-QN_SDK extern qn_bool qn_json_itr2_get_integer(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_integer * restrict val);
-QN_SDK extern qn_bool qn_json_itr2_get_number(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_json_number * restrict val);
-QN_SDK extern qn_bool qn_json_itr2_get_boolean(qn_json_iterator2_ptr restrict itr, qn_string * restrict key, qn_bool * restrict val);
-QN_SDK extern qn_bool qn_json_itr2_get_null(qn_json_iterator2_ptr restrict itr, qn_string * restrict key);
+QN_SDK extern qn_json_type qn_json_itr_get_type(qn_json_iterator_ptr restrict itr);
 
-QN_SDK extern void qn_json_itr2_reclaim_string(qn_json_iterator2_ptr restrict itr, qn_string restrict key);
+QN_SDK extern qn_bool qn_json_itr_get_object(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_object_ptr * restrict val);
+QN_SDK extern qn_bool qn_json_itr_get_array(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_array_ptr * restrict val);
+QN_SDK extern qn_bool qn_json_itr_get_string(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_string * restrict val);
+QN_SDK extern qn_bool qn_json_itr_get_integer(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_integer * restrict val);
+QN_SDK extern qn_bool qn_json_itr_get_number(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_json_number * restrict val);
+QN_SDK extern qn_bool qn_json_itr_get_boolean(qn_json_iterator_ptr restrict itr, qn_string * restrict key, qn_bool * restrict val);
+QN_SDK extern qn_bool qn_json_itr_get_null(qn_json_iterator_ptr restrict itr, qn_string * restrict key);
 
-QN_SDK extern qn_json_type qn_json_itr2_get_type(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern void qn_json_itr_reclaim_string(qn_json_iterator_ptr restrict itr, qn_string restrict key);
 
-QN_SDK extern qn_json_object_ptr qn_json_itr2_get_top_object(qn_json_iterator2_ptr restrict itr);
-QN_SDK extern qn_json_array_ptr qn_json_itr2_get_top_array(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern qn_json_object_ptr qn_json_itr_get_top_object(qn_json_iterator_ptr restrict itr);
+QN_SDK extern qn_json_array_ptr qn_json_itr_get_top_array(qn_json_iterator_ptr restrict itr);
 
-QN_SDK extern void qn_json_itr2_set_top_status(qn_json_iterator2_ptr restrict itr, qn_uint16 status);
-QN_SDK extern qn_uint16 qn_json_itr2_get_top_status(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern void qn_json_itr_set_top_status(qn_json_iterator_ptr restrict itr, qn_uint16 status);
+QN_SDK extern qn_uint16 qn_json_itr_get_top_status(qn_json_iterator_ptr restrict itr);
 
-QN_SDK extern qn_bool qn_json_itr2_is_empty(qn_json_iterator2_ptr restrict itr);
+QN_SDK extern qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr);
 
-static inline qn_bool qn_json_itr2_start_with_object(qn_json_iterator2_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
+static inline qn_bool qn_json_itr_start_with_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr restrict obj, qn_uint16 status)
 {
-    qn_json_itr2_pop_all(itr);
-    return qn_json_itr2_push_object(itr, obj, status);
+    qn_json_itr_pop_all(itr);
+    return qn_json_itr_push_object(itr, obj, status);
 }
 
-static inline qn_bool qn_json_itr2_start_with_array(qn_json_iterator2_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status)
+static inline qn_bool qn_json_itr_start_with_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr restrict arr, qn_uint16 status)
 {
-    qn_json_itr2_pop_all(itr);
-    return qn_json_itr2_push_array(itr, arr, status);
+    qn_json_itr_pop_all(itr);
+    return qn_json_itr_push_array(itr, arr, status);
 }
 
-static inline qn_bool qn_json_itr2_is_object(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_is_object(qn_json_iterator_ptr restrict itr)
 {
-    return (qn_json_itr2_get_type(itr) == QN_JSON_OBJECT);
+    return (qn_json_itr_get_type(itr) == QN_JSON_OBJECT);
 }
 
-static inline qn_bool qn_json_itr2_is_array(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_is_array(qn_json_iterator_ptr restrict itr)
 {
-    return (qn_json_itr2_get_type(itr) == QN_JSON_ARRAY);
+    return (qn_json_itr_get_type(itr) == QN_JSON_ARRAY);
 }
 
-static inline qn_bool qn_json_itr2_is_string(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_is_string(qn_json_iterator_ptr restrict itr)
 {
-    return (qn_json_itr2_get_type(itr) == QN_JSON_STRING);
+    return (qn_json_itr_get_type(itr) == QN_JSON_STRING);
 }
 
-static inline qn_bool qn_json_itr2_is_integer(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_is_integer(qn_json_iterator_ptr restrict itr)
 {
-    return (qn_json_itr2_get_type(itr) == QN_JSON_INTEGER);
+    return (qn_json_itr_get_type(itr) == QN_JSON_INTEGER);
 }
 
-static inline qn_bool qn_json_itr2_is_number(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_is_number(qn_json_iterator_ptr restrict itr)
 {
-    return (qn_json_itr2_get_type(itr) == QN_JSON_NUMBER);
+    return (qn_json_itr_get_type(itr) == QN_JSON_NUMBER);
 }
 
-static inline qn_bool qn_json_itr2_is_null(qn_json_iterator2_ptr restrict itr)
+static inline qn_bool qn_json_itr_is_null(qn_json_iterator_ptr restrict itr)
 {
-    return (qn_json_itr2_get_type(itr) == QN_JSON_NULL);
+    return (qn_json_itr_get_type(itr) == QN_JSON_NULL);
 }
 
 #ifdef __cplusplus
