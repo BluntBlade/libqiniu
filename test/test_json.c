@@ -2478,7 +2478,7 @@ void test_format_object_holding_complex_element(void)
 
     CU_ASSERT_TRUE(qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size));
     CU_ASSERT_EQUAL_FATAL(buf_size, 25);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_arr\":[null],\"_obj\":{}}", 25), 0);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_arr\":[null],\"_obj\":{}}", buf_size), 0);
 
     qn_json_obj_destroy(obj_root);
 
@@ -2498,7 +2498,37 @@ void test_format_object_holding_complex_element(void)
     buf_size = sizeof(buf);
     CU_ASSERT_TRUE(qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size));
     CU_ASSERT_EQUAL_FATAL(buf_size, 24);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_fst\":{},\"_snd\":[999]}", 24), 0);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_fst\":{},\"_snd\":[999]}", buf_size), 0);
+
+    qn_json_obj_destroy(obj_root);
+
+    /*-- Only empty object --*/
+
+    obj_root = qn_json_obj_create();
+    CU_ASSERT_FATAL(obj_root != NULL);
+
+    obj_elem = qn_json_obj_set_new_empty_object(obj_root, "_obj");
+    CU_ASSERT_FATAL(obj_elem != NULL);
+
+    buf_size = sizeof(buf);
+    CU_ASSERT_TRUE(qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size));
+    CU_ASSERT_EQUAL_FATAL(buf_size, 11);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_obj\":{}}", buf_size), 0);
+
+    qn_json_obj_destroy(obj_root);
+
+    /*-- Only empty array --*/
+
+    obj_root = qn_json_obj_create();
+    CU_ASSERT_FATAL(obj_root != NULL);
+
+    arr_elem = qn_json_obj_set_new_empty_array(obj_root, "_arr");
+    CU_ASSERT_FATAL(arr_elem != NULL);
+
+    buf_size = sizeof(buf);
+    CU_ASSERT_TRUE(qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size));
+    CU_ASSERT_EQUAL_FATAL(buf_size, 11);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_arr\":[]}", buf_size), 0);
 
     qn_json_obj_destroy(obj_root);
 
@@ -2532,7 +2562,7 @@ void test_format_array_holding_complex_element(void)
 
     CU_ASSERT_TRUE(qn_json_fmt_format_array(fmt, arr_root, buf, &buf_size));
     CU_ASSERT_EQUAL_FATAL(buf_size, 19);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[{\"_null\":null},[]]", 19), 0);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[{\"_null\":null},[]]", buf_size), 0);
 
     qn_json_arr_destroy(arr_root);
 
@@ -2552,7 +2582,37 @@ void test_format_array_holding_complex_element(void)
     buf_size = sizeof(buf);
     CU_ASSERT_TRUE(qn_json_fmt_format_array(fmt, arr_root, buf, &buf_size));
     CU_ASSERT_EQUAL_FATAL(buf_size, 23);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[[],{\"_str\":\"Trivial\"}]", 23), 0);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[[],{\"_str\":\"Trivial\"}]", buf_size), 0);
+
+    qn_json_arr_destroy(arr_root);
+
+    /*-- Only empty object --*/
+
+    arr_root = qn_json_arr_create();
+    CU_ASSERT_FATAL(arr_root != NULL);
+
+    obj_elem = qn_json_arr_push_new_empty_object(arr_root);
+    CU_ASSERT_TRUE(obj_elem != NULL);
+
+    buf_size = sizeof(buf);
+    CU_ASSERT_TRUE(qn_json_fmt_format_array(fmt, arr_root, buf, &buf_size));
+    CU_ASSERT_EQUAL_FATAL(buf_size, 4);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[{}]", buf_size), 0);
+
+    qn_json_arr_destroy(arr_root);
+
+    /*-- Only empty array --*/
+
+    arr_root = qn_json_arr_create();
+    CU_ASSERT_FATAL(arr_root != NULL);
+
+    arr_elem = qn_json_arr_push_new_empty_array(arr_root);
+    CU_ASSERT_TRUE(arr_elem != NULL);
+
+    buf_size = sizeof(buf);
+    CU_ASSERT_TRUE(qn_json_fmt_format_array(fmt, arr_root, buf, &buf_size));
+    CU_ASSERT_EQUAL_FATAL(buf_size, 4);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[[]]", buf_size), 0);
 
     qn_json_arr_destroy(arr_root);
     qn_json_fmt_destroy(fmt);
