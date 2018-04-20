@@ -293,8 +293,8 @@ static qn_json_object_ptr qn_easy_put_huge_imp(qn_easy_ptr restrict easy, const 
     qn_json_integer code = 0;
     qn_string resumable_info = NULL;
     qn_stor_upload_extra_ptr upe = NULL;
-    qn_json_object_ptr put_ret;
-    qn_stor_resumable_upload_ptr ru;
+    qn_json_object_ptr put_ret = NULL;
+    qn_stor_resumable_upload_ptr ru = NULL;
 
     if (ext) {
         if (! (upe = qn_stor_upe_create())) return NULL;
@@ -482,7 +482,6 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
 
 QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
-    int i;
     qn_json_integer code = 0;
     qn_string tmp_str;
     qn_io_reader_itf io_rdr;
@@ -493,19 +492,6 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
     qn_easy_init_put_extra(ext, &real_ext);
     
     // ---- Make some information checks and choose some strategies.
-    // -- Select an upload region.
-    if (! real_ext.put_ctrl.rgn_entry) {
-        if (real_ext.put_ctrl.rgn_host) {
-            rgn_host = real_ext.put_ctrl.rgn_host;
-        } else {
-            rgn_host = qn_easy_select_putting_region_host(easy, uptoken, &pp, &real_ext);
-            if (! rgn_host) {
-                qn_json_obj_destroy(pp);
-                return NULL;
-            } // if
-        } // if
-    } // if
-
     if (! real_ext.attr.final_key) {
         if (! qn_easy_check_putting_key(easy, uptoken, &pp, &real_ext)) {
             qn_json_obj_destroy(pp);

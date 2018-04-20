@@ -1,6 +1,6 @@
 #include <ctype.h>
 #include "qiniu/base/errors.h"
-#include "qiniu/http_header_parser.h"
+#include "qiniu/http/header_parser.h"
 
 #ifdef __cplusplus
 extern "C"

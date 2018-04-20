@@ -2,7 +2,8 @@
 #include <assert.h>
 
 #include "qiniu/base/errors.h"
-#include "qiniu/http.h"
+#include "qiniu/http/header.h"
+#include "qiniu/http/connection.h"
 #include "qiniu/region.h"
 #include "qiniu/version.h"
 

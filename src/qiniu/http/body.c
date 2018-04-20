@@ -22,7 +22,7 @@ typedef enum _QN_HTTP_JSON_STATUS
 
 typedef struct _QN_HTTP_JSON
 {
-    qn_http_body_itf body_vtbl;
+    qn_http_body_ptr body_vtbl;
     qn_json_parser_ptr prs;
     qn_json_object_ptr obj;
     qn_json_array_ptr arr;
@@ -67,7 +67,7 @@ QN_SDK void qn_http_json_destroy(qn_http_json_ptr restrict body)
 {
     if (body) {
         qn_http_json_reset(body);
-        qn_json_parser_destroy(body->prs);
+        qn_json_prs_destroy(body->prs);
         free(body);
     } // if
 }
@@ -77,11 +77,11 @@ QN_SDK void qn_http_json_reset(qn_http_json_ptr restrict body)
     assert(body);
 
     if (body->obj) {
-        qn_json_destroy_object(body->obj);
+        qn_json_obj_destroy(body->obj);
         body->obj = NULL;
     } // if
     if (body->arr) {
-        qn_json_destroy_array(body->arr);
+        qn_json_arr_destroy(body->arr);
         body->arr = NULL;
     } // if
     body->sts = QN_HTTP_JSON_PARSING_READY;

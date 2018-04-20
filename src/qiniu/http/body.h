@@ -29,7 +29,7 @@ static inline size_t qn_http_body_parse(qn_http_body_itf restrict itf, char * re
 /* ==== Declaration of HTTP JSON-Body Parser (Abbreviation: http_json) ==== */
 
 struct _QN_HTTP_JSON;
-typedef struct _QN_HTTP_JSON * qn_http_json;
+typedef struct _QN_HTTP_JSON * qn_http_json_ptr;
 
 /* == Constructor & Destructor methods == */
 

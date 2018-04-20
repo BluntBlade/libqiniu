@@ -49,7 +49,7 @@ QN_SDK void qn_mac_destroy(qn_mac_ptr restrict mac)
 
 static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * restrict data, qn_size data_size)
 {
-#define QN_MAC_HMAC_MAX_WRITING_BYTES ( ((~((int)0)) << 1) >> 1 )
+#define QN_MAC_HMAC_MAX_WRITING_BYTES ( ((~((qn_uint)0)) << 1) >> 1 )
     int writing_bytes;
     qn_size rem_size = data_size;
     const unsigned char * pos = data;
