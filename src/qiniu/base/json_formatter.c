@@ -26,7 +26,8 @@ enum
     QN_JSON_FMT_BOOLEAN = 11,
     QN_JSON_FMT_NULL = 12,
     QN_JSON_FMT_END = 13,
-    QN_JSON_FMT_ERROR = 14
+    QN_JSON_FMT_ERROR = 14,
+    QN_JSON_FMT_INDENT = 15
 };
 
 enum
@@ -38,6 +39,8 @@ typedef struct _QN_JSON_FORMATTER {
     int flags;
     qn_uint32 with_key:1;
     qn_uint32 tkn:4;
+    qn_uint32 indent_ch:8;
+    qn_uint32 indent_num:8;
 
     char * buf;
     qn_size buf_size;
@@ -85,6 +88,8 @@ QN_SDK void qn_json_fmt_reset(qn_json_formatter_ptr restrict fmt)
 {
     qn_json_itr_pop_all(fmt->itr);
     fmt->tkn = QN_JSON_FMT_START;
+    fmt->indent_ch = '\0';
+    fmt->indent_num = 0;
     fmt->flags = 0;
 }
 
@@ -98,6 +103,12 @@ QN_SDK void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restric
     fmt->flags &= ~QN_JSON_FMT_ESCAPE_UTF8_STRING;
 }
 
+QN_SDK void qn_json_fmt_enable_pretty_formatting(qn_json_formatter_ptr restrict fmt, char ch)
+{
+    assert(fmt);
+    fmt->indent_ch = ch;
+}
+
 static inline qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 {
     if (fmt->buf_size == fmt->buf_capacity) {
@@ -107,6 +118,11 @@ static inline qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 
     fmt->buf[fmt->buf_size++] = ch;
     return qn_true;
+}
+
+static inline void qn_json_fmt_unputc(qn_json_formatter_ptr fmt)
+{
+    fmt->buf_size--;
 }
 
 static qn_bool qn_json_fmt_serialize_string(qn_json_formatter_ptr restrict fmt)
@@ -474,13 +490,44 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr restrict fmt, char * res
 
     while (fmt->tkn != QN_JSON_FMT_END) {
         switch (fmt->tkn) {
+            case QN_JSON_FMT_INDENT:
+                if (fmt->buf_capacity - fmt->buf_size < fmt->indent_num) {
+                    qn_err_set_out_of_buffer();
+                    goto QN_JSON_FMT_FORMAT_ERROR_HANDLING;
+                }
+                memset(fmt->buf + fmt->buf_size, fmt->indent_ch, fmt->indent_num);
+                fmt->buf_size += fmt->indent_num;
+                fmt->tkn = qn_json_fmt_next_token(fmt);
+                break;
+
             case QN_JSON_FMT_COMMA:
                 if (qn_json_itr_has_next_one(fmt->itr)) {
                     if (! qn_json_fmt_putc(fmt, ',')) goto QN_JSON_FMT_FORMAT_ERROR_HANDLING;
+                    if (fmt->indent_ch) {
+                        if (! qn_json_fmt_putc(fmt, '\n')) {
+                            qn_json_fmt_unputc(fmt);
+                            goto QN_JSON_FMT_FORMAT_ERROR_HANDLING;
+                        }
+                        fmt->tkn = QN_JSON_FMT_INDENT;
+                    } else {
+                        fmt->tkn = qn_json_fmt_next_token(fmt);
+                    }
                     fmt->with_key = 1;
-                    fmt->tkn = qn_json_fmt_next_token(fmt);
                     continue;
                 }
+
+                if (fmt->indent_ch) {
+                    if (fmt->buf_capacity - fmt->buf_size < fmt->indent_num - 1 + 1) {
+                        qn_err_set_out_of_buffer();
+                        goto QN_JSON_FMT_FORMAT_ERROR_HANDLING;
+                    }
+                    fmt->indent_num--;
+
+                    qn_json_fmt_putc(fmt, '\n');
+                    memset(fmt->buf + fmt->buf_size, fmt->indent_ch, fmt->indent_num);
+                    fmt->buf_size += fmt->indent_num;
+                }
+
                 fmt->tkn = QN_JSON_FMT_CLOSING;
 
             case QN_JSON_FMT_CLOSING:
@@ -502,12 +549,22 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr restrict fmt, char * res
 
             case QN_JSON_FMT_OPENING_BRACE:
                 if (! qn_json_fmt_putc(fmt, '{')) goto QN_JSON_FMT_FORMAT_ERROR_HANDLING;
-                fmt->tkn = qn_json_itr_has_next_one(fmt->itr) ? qn_json_fmt_next_token(fmt) : QN_JSON_FMT_CLOSING;
+                if (fmt->indent_ch) {
+                    fmt->indent_num++;
+                    fmt->tkn = qn_json_itr_has_next_one(fmt->itr) ? QN_JSON_FMT_INDENT : QN_JSON_FMT_CLOSING;
+                } else {
+                    fmt->tkn = qn_json_itr_has_next_one(fmt->itr) ? qn_json_fmt_next_token(fmt) : QN_JSON_FMT_CLOSING;
+                }
                 break;
 
             case QN_JSON_FMT_OPENING_BRACKET:
                 if (! qn_json_fmt_putc(fmt, '[')) goto QN_JSON_FMT_FORMAT_ERROR_HANDLING;
-                fmt->tkn = qn_json_itr_has_next_one(fmt->itr) ? qn_json_fmt_next_token(fmt) : QN_JSON_FMT_CLOSING;
+                if (fmt->indent_ch) {
+                    fmt->indent_num++;
+                    fmt->tkn = qn_json_itr_has_next_one(fmt->itr) ? QN_JSON_FMT_INDENT : QN_JSON_FMT_CLOSING;
+                } else {
+                    fmt->tkn = qn_json_itr_has_next_one(fmt->itr) ? qn_json_fmt_next_token(fmt) : QN_JSON_FMT_CLOSING;
+                }
                 break;
 
             case QN_JSON_FMT_OBJECT: if (! qn_json_fmt_push_object(fmt)) { goto QN_JSON_FMT_FORMAT_ERROR_HANDLING; } break;
