@@ -1,30 +1,13 @@
-#ifndef __QN_HTTP_BODY_H__
-#define __QN_HTTP_BODY_H__
+#ifndef __QN_HTTP_BODY_JSON_H__
+#define __QN_HTTP_BODY_JSON_H__
 
 #include "qiniu/macros.h"
+#include "base/http/body.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-/* ==== Definition of HTTP Body Interface (Abbreviation: http_body) ==== */
-
-struct _QN_HTTP_BODY;
-typedef struct _QN_HTTP_BODY * qn_http_body_ptr;
-typedef qn_http_body_ptr * qn_http_body_itf;
-
-typedef size_t (*qn_http_body_parse_fn)(qn_http_body_itf restrict itf, char * restrict buf, size_t buf_size);
-
-typedef struct _QN_HTTP_BODY
-{
-    qn_http_body_parse_fn parse;
-} qn_http_body_st;
-
-static inline size_t qn_http_body_parse(qn_http_body_itf restrict itf, char * restrict buf, size_t buf_size)
-{
-    return (*itf)->parse(itf, buf, buf_size);
-}
 
 /* ==== Declaration of HTTP JSON-Body Parser (Abbreviation: http_json) ==== */
 
@@ -49,10 +32,12 @@ QN_SDK extern qn_json_array_ptr qn_http_json_get_array(qn_http_json_ptr restrict
 /* == Interface methods == */
 
 QN_SDK extern size_t qn_http_json_parse(qn_http_json_ptr restrict body, char * restrict buf, size_t buf_size);
+QN_SDK extern const char * qn_http_json_mime_type(qn_http_body_itf restrict itf);
+QN_SDK extern qn_fsize qn_http_json_size(qn_http_body_itf restrict itf);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __QN_HTTP_BODY_H__ */
+#endif /* __QN_HTTP_BODY_JSON_H__ */
 

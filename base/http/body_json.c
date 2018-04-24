@@ -2,7 +2,7 @@
 
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/errors.h"
-#include "qiniu/http/body.h"
+#include "base/http/body_json.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -41,8 +41,21 @@ static size_t qn_http_json_parse_vfn(qn_http_body_itf restrict itf, char * restr
     return qn_http_json_parse(qn_http_json_from_body(itf), buf, buf_size);
 }
 
+static const char * qn_http_json_mime_type_vfn(qn_http_body_itf restrict itf)
+{
+    return qn_http_json_mime_type(qn_http_json_from_body(itf));
+}
+
+static qn_fsize qn_http_json_size_vfn(qn_http_body_itf restrict itf)
+{
+    return qn_http_json_size(qn_http_json_from_body(itf));
+}
+
 static qn_http_body_st qn_http_json_body_vtable = {
-    &qn_http_json_parse_vfn
+    &qn_http_json_parse_vfn,
+
+    &qn_http_json_mime_type_vfn,
+    &qn_http_json_size_vfn
 };
 
 QN_SDK qn_http_json_ptr qn_http_json_create(void)
@@ -112,7 +125,7 @@ QN_SDK qn_json_array_ptr qn_http_json_get_array(qn_http_json_ptr restrict body)
 
 static size_t qn_http_json_parse_object(qn_http_json_ptr body, char * restrict buf, size_t buf_size)
 {
-    size_t size = buf_size;
+    qn_size size = buf_size;
     if (qn_json_prs_parse_object(body->prs, buf, &size, &body->obj)) {
         /* Parsing object is done. */
         body->sts = QN_HTTP_JSON_PARSING_DONE;
@@ -133,7 +146,7 @@ static size_t qn_http_json_parse_object(qn_http_json_ptr body, char * restrict b
 
 static size_t qn_http_json_parse_array(qn_http_json_ptr body, char * restrict buf, size_t buf_size)
 {
-    size_t size = buf_size;
+    qn_size size = buf_size;
     if (qn_json_prs_parse_array(body->prs, buf, &size, &body->arr)) {
         /* Parsing array is done. */
         body->sts = QN_HTTP_JSON_PARSING_DONE;
@@ -184,6 +197,16 @@ QN_SDK size_t qn_http_json_parse(qn_http_json_ptr restrict body, char * restrict
         case QN_HTTP_JSON_PARSING_DONE: break;
     } // switch
     return buf_size;
+}
+
+QN_SDK const char * qn_http_json_mime_type(qn_http_body_itf restrict itf)
+{
+    return "application/json";
+}
+
+QN_SDK qn_fsize qn_http_json_size(qn_http_body_itf restrict itf)
+{
+    return 0;
 }
 
 #ifdef __cplusplus
